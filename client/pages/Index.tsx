@@ -80,7 +80,7 @@ export default function Index() {
               <AnimatedButton
                 onClick={handleConnectWallet}
                 size="lg"
-                className="bg-blue-600 hover:bg-blue-700 text-white text-lg px-8 py-6 h-auto rounded-lg flex items-center justify-center gap-2"
+                className="bg-blue-600 hover:bg-blue-700 text-white text-lg px-6 sm:px-8 py-6 h-auto rounded-lg flex items-center justify-center gap-2"
               >
                 <span>Link Your Coinbase Wallet</span>
                 <ArrowRight size={20} />
