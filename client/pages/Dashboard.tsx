@@ -288,7 +288,12 @@ export default function Dashboard() {
         </div>
 
         {/* Assets Overview */}
-        <div className="bg-white rounded-xl border border-blue-100 shadow-sm overflow-hidden mb-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.3 }}
+          className="bg-white rounded-xl border border-blue-100 shadow-sm overflow-hidden mb-8"
+        >
           <div className="p-6 border-b border-blue-100">
             <h3 className="text-lg font-semibold text-gray-900">Your Assets</h3>
           </div>
@@ -329,10 +334,15 @@ export default function Dashboard() {
               </tbody>
             </table>
           </div>
-        </div>
+        </motion.div>
 
         {/* Transaction History */}
-        <div className="bg-white rounded-xl border border-blue-100 shadow-sm">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.4 }}
+          className="bg-white rounded-xl border border-blue-100 shadow-sm"
+        >
           <div className="p-6 border-b border-blue-100">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-lg font-semibold text-gray-900">Transaction History</h3>
@@ -440,7 +450,7 @@ export default function Dashboard() {
               </Button>
             </div>
           )}
-        </div>
+        </motion.div>
       </main>
     </div>
   );
