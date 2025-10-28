@@ -29,7 +29,7 @@ export default function Index() {
             <a href="#security" className="text-gray-600 hover:text-gray-900">
               Security
             </a>
-            <a href="#about" className="text-gray-600 hover:text-gray-900">
+            <a href="/about" className="text-gray-600 hover:text-gray-900">
               About
             </a>
           </nav>
@@ -378,17 +378,28 @@ export default function Index() {
                   {section.title}
                 </h4>
                 <ul className="space-y-2 text-gray-600">
-                  {section.links.map((link, linkIdx) => (
-                    <motion.li
-                      key={linkIdx}
-                      whileHover={{ x: 5 }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      <a href="#" className="hover:text-gray-900">
-                        {link}
-                      </a>
-                    </motion.li>
-                  ))}
+                  {section.links.map((link, linkIdx) => {
+                    const href =
+                      link === "Features" ? "/#features" :
+                      link === "Security" ? "/#security" :
+                      link === "About" ? "/about" :
+                      link === "Blog" ? "/blog" :
+                      link === "Terms of Service" ? "/terms" :
+                      link === "Privacy Policy" ? "/privacy" :
+                      link === "Help Center" ? "/help" :
+                      link === "Contact Us" ? "/contact" : "#";
+                    return (
+                      <motion.li
+                        key={linkIdx}
+                        whileHover={{ x: 5 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <a href={href} className="hover:text-gray-900">
+                          {link}
+                        </a>
+                      </motion.li>
+                    );
+                  })}
                 </ul>
               </motion.div>
             ))}
