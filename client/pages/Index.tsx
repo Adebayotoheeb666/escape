@@ -89,7 +89,7 @@ export default function Index() {
                 variant="outline"
                 size="lg"
                 onClick={() => navigate("/about")}
-                className="text-blue-600 border-blue-200 hover:bg-blue-50 text-lg px-8 py-6 h-auto rounded-lg"
+                className="text-blue-600 border-blue-200 hover:bg-blue-50 text-lg px-6 sm:px-8 py-6 h-auto rounded-lg"
               >
                 Learn More
               </AnimatedButton>
