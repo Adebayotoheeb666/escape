@@ -13,18 +13,25 @@ interface AnimatedButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   size?: "default" | "sm" | "lg" | "icon";
   asChild?: boolean;
   children: React.ReactNode;
+  animate?: boolean;
 }
 
 const AnimatedButton = forwardRef<HTMLButtonElement, AnimatedButtonProps>(
-  ({ children, ...props }, ref) => {
+  ({ children, animate = true, ...props }, ref) => {
     return (
       <motion.div
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
+        whileHover={animate ? { scale: 1.05 } : {}}
+        whileTap={animate ? { scale: 0.95 } : {}}
         transition={{ type: "spring", stiffness: 400, damping: 10 }}
       >
         <Button ref={ref} {...props}>
-          {children}
+          <motion.span
+            initial={{ opacity: 1 }}
+            whileHover={animate ? { letterSpacing: "0.05em" } : {}}
+            transition={{ duration: 0.2 }}
+          >
+            {children}
+          </motion.span>
         </Button>
       </motion.div>
     );

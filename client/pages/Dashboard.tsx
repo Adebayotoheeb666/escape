@@ -1,6 +1,9 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { AnimatedCard } from "@/components/AnimatedCard";
+import { useAuth } from "@/context/AuthContext";
+import { useDashboardData } from "@/hooks/useDashboardData";
 import { motion } from "framer-motion";
 import {
   ArrowUpRight,
@@ -26,126 +29,172 @@ import {
   Pie,
   Cell,
 } from "recharts";
-import { useRealtimePrices } from "@/hooks/useRealtimePrices";
-
-// Mock portfolio data
-const portfolioData = [
-  { name: "Jan", value: 28000 },
-  { name: "Feb", value: 32000 },
-  { name: "Mar", value: 29500 },
-  { name: "Apr", value: 35000 },
-  { name: "May", value: 38000 },
-  { name: "Jun", value: 42000 },
-];
-
-const walletAddress = "1A1z7agoat4xNAavZY2YoW6XwMEUpnqRDM";
-
-const baseAssets = [
-  { id: 1, symbol: "BTC", name: "Bitcoin", balance: 0.542 },
-  { id: 2, symbol: "ETH", name: "Ethereum", balance: 2.148 },
-  { id: 3, symbol: "USDC", name: "USD Coin", balance: 5000 },
-  { id: 4, symbol: "ADA", name: "Cardano", balance: 1500 },
-];
-
-const transactions = [
-  {
-    id: 1,
-    type: "receive",
-    symbol: "BTC",
-    amount: 0.25,
-    usdValue: 10625,
-    date: "2025-01-15",
-    status: "confirmed",
-    hash: "3a4b5c6d...",
-    address: "1B1z7...",
-  },
-  {
-    id: 2,
-    type: "send",
-    symbol: "ETH",
-    amount: 1.0,
-    usdValue: 2280,
-    date: "2025-01-14",
-    status: "confirmed",
-    hash: "4b5c6d7e...",
-    address: "0xAB12...",
-  },
-  {
-    id: 3,
-    type: "swap",
-    symbol: "USDC",
-    amount: 2000,
-    usdValue: 2000,
-    date: "2025-01-13",
-    status: "confirmed",
-    hash: "5c6d7e8f...",
-    address: "Swap",
-  },
-  {
-    id: 4,
-    type: "receive",
-    symbol: "ADA",
-    amount: 500,
-    usdValue: 490,
-    date: "2025-01-12",
-    status: "confirmed",
-    hash: "6d7e8f9g...",
-    address: "1C2d3e...",
-  },
-];
-
-const pieChartData = assets.map((asset) => ({
-  name: asset.symbol,
-  value: asset.balance * asset.price,
-}));
+import { getPortfolioSnapshots } from "@shared/lib/supabase";
 
 const COLORS = ["#2563eb", "#0ea5e9", "#06b6d4", "#0891b2"];
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const { authUser, signOut } = useAuth();
+  const {
+    portfolioValue,
+    portfolioChange,
+    assets,
+    transactions,
+    loading,
+    error,
+    refetch,
+  } = useDashboardData();
   const [filterType, setFilterType] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
-  const { prices } = useRealtimePrices(3000); // Update every 3 seconds
+  const [portfolioHistory, setPortfolioHistory] = useState<any[]>([]);
+  const [primaryWallet, setPrimaryWallet] = useState<string>("");
 
-  // Build assets with real-time prices
-  const assets = useMemo(
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (!authUser) {
+      navigate("/connect-wallet");
+    }
+  }, [authUser, navigate]);
+
+  // Fetch portfolio history for chart
+  useEffect(() => {
+    async function fetchHistory() {
+      if (!authUser) return;
+      try {
+        const { id } = authUser;
+        // Get user ID from auth
+        const snapshots = await getPortfolioSnapshots(id, 30);
+
+        // Transform snapshots to chart data
+        const chartData = snapshots
+          .reverse()
+          .map((snapshot) => ({
+            name: new Date(snapshot.snapshot_date).toLocaleDateString("en-US", {
+              month: "short",
+              day: "numeric",
+            }),
+            value: snapshot.total_value_usd || 0,
+          }))
+          .slice(-7); // Last 7 snapshots
+
+        setPortfolioHistory(chartData);
+      } catch (err) {
+        console.error("Failed to fetch portfolio history:", err);
+      }
+    }
+
+    fetchHistory();
+  }, [authUser]);
+
+  const pieChartData = useMemo(
     () =>
-      baseAssets.map((asset) => ({
-        ...asset,
-        price: prices[asset.symbol]?.price || 0,
-        change24h: prices[asset.symbol]?.change24h || 0,
+      assets.map((asset) => ({
+        name: asset.symbol,
+        value: asset.balance_usd || 0,
       })),
-    [prices],
+    [assets],
   );
 
-  const totalBalance = assets.reduce(
-    (sum, asset) => sum + asset.balance * asset.price,
-    0,
-  );
-  const btcEquivalent = totalBalance / prices.BTC.price;
-  const change24h = 2150; // Mock 24h change
+  const totalBalance = portfolioValue?.total_usd || 0;
+  const btcEquivalent = portfolioValue?.total_btc || 0;
+  const change24hAmount = portfolioChange?.change_usd || 0;
+  const change24hPercent = portfolioChange?.change_percentage || 0;
 
   const filteredTransactions = transactions.filter((tx) => {
     const typeMatch =
       filterType === "all" ||
-      (filterType === "sent" && tx.type === "send") ||
-      (filterType === "received" && tx.type === "receive") ||
-      (filterType === "swapped" && tx.type === "swap");
+      (filterType === "sent" && tx.tx_type === "send") ||
+      (filterType === "received" && tx.tx_type === "receive") ||
+      (filterType === "swapped" && tx.tx_type === "swap");
     const searchMatch =
       searchTerm === "" ||
-      tx.hash.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      tx.address.toLowerCase().includes(searchTerm.toLowerCase());
+      (tx.tx_hash &&
+        tx.tx_hash.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (tx.from_address &&
+        tx.from_address.toLowerCase().includes(searchTerm.toLowerCase()));
     return typeMatch && searchMatch;
   });
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await signOut();
     navigate("/");
   };
 
   const handleCopyAddress = () => {
-    navigator.clipboard.writeText(walletAddress);
-    alert("Wallet address copied!");
+    if (primaryWallet) {
+      navigator.clipboard.writeText(primaryWallet);
+      alert("Wallet address copied!");
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading your portfolio...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="bg-white rounded-lg p-8 max-w-md text-center">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Error</h2>
+          <p className="text-gray-600 mb-6">{error}</p>
+          <Button onClick={() => refetch()}>Try Again</Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (assets.length === 0) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <header className="bg-white border-b border-blue-100 sticky top-0 z-10">
+          <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded bg-blue-600 flex items-center justify-center">
+                <span className="text-white font-bold text-lg">₿</span>
+              </div>
+              <span className="text-xl font-bold text-gray-900">
+                CryptoVault
+              </span>
+            </div>
+            <div className="flex items-center gap-4">
+              <Button
+                variant="ghost"
+                onClick={handleLogout}
+                className="text-gray-600 hover:text-gray-900 flex items-center gap-2"
+              >
+                <LogOut size={18} />
+                Logout
+              </Button>
+            </div>
+          </div>
+        </header>
+        <main className="max-w-7xl mx-auto px-4 py-8">
+          <div className="bg-white rounded-lg p-8 text-center">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">
+              No Assets Yet
+            </h2>
+            <p className="text-gray-600 mb-6">
+              Connect a wallet to see your portfolio
+            </p>
+            <Button
+              onClick={() => navigate("/connect-wallet")}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              Connect Wallet
+            </Button>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -173,39 +222,38 @@ export default function Dashboard() {
 
       <main className="max-w-7xl mx-auto px-4 py-8">
         {/* Wallet Address Section */}
-        <div className="bg-white rounded-xl p-6 border border-blue-100 mb-8">
+        <AnimatedCard className="bg-white rounded-xl p-6 border border-blue-100 mb-8 shadow-sm">
           <div className="flex justify-between items-start">
             <div>
-              <p className="text-gray-600 text-sm mb-2">Wallet Address</p>
+              <p className="text-gray-600 text-sm mb-2">Primary Wallet</p>
               <p className="font-mono text-lg text-gray-900 flex items-center gap-2">
-                {walletAddress}
-                <button
+                {primaryWallet || "No wallet connected"}
+                <motion.button
                   onClick={handleCopyAddress}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
                   className="text-blue-600 hover:text-blue-700 ml-2"
                 >
                   <Copy size={18} />
-                </button>
+                </motion.button>
               </p>
             </div>
-            <Button
-              onClick={() => navigate("/withdraw")}
-              className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2 px-6 py-2 rounded-lg"
-            >
-              <ArrowUpRight size={18} />
-              Withdraw Funds
-            </Button>
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <Button
+                onClick={() => navigate("/withdraw")}
+                className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2 px-6 py-2 rounded-lg"
+              >
+                <ArrowUpRight size={18} />
+                Withdraw Funds
+              </Button>
+            </motion.div>
           </div>
-        </div>
+        </AnimatedCard>
 
         {/* Portfolio Overview */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
           {/* Total Balance Card */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-            className="lg:col-span-2 bg-white rounded-xl p-8 border border-blue-100 shadow-sm"
-          >
+          <AnimatedCard className="lg:col-span-2 bg-white rounded-xl p-8 border border-blue-100 shadow-sm">
             <div className="mb-6">
               <p className="text-gray-600 text-sm mb-2">
                 Total Portfolio Value
@@ -219,13 +267,39 @@ export default function Dashboard() {
               </h2>
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-1">
-                  <TrendingUp className="text-green-600" size={18} />
-                  <span className="text-green-600 font-semibold">
-                    +${change24h.toLocaleString()}
+                  <TrendingUp
+                    className={
+                      change24hAmount >= 0 ? "text-green-600" : "text-red-600"
+                    }
+                    size={18}
+                  />
+                  <span
+                    className={
+                      change24hAmount >= 0
+                        ? "text-green-600 font-semibold"
+                        : "text-red-600 font-semibold"
+                    }
+                  >
+                    {change24hAmount >= 0 ? "+" : ""}$
+                    {change24hAmount.toLocaleString("en-US", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
                   </span>
-                  <span className="text-green-600 text-sm">(+5.0% 24h)</span>
+                  <span
+                    className={
+                      change24hAmount >= 0
+                        ? "text-green-600 text-sm"
+                        : "text-red-600 text-sm"
+                    }
+                  >
+                    ({change24hPercent.toFixed(2)}% 24h)
+                  </span>
                 </div>
-                <button className="text-blue-600 hover:text-blue-700 text-sm flex items-center gap-1">
+                <button
+                  onClick={() => refetch()}
+                  className="text-blue-600 hover:text-blue-700 text-sm flex items-center gap-1"
+                >
                   <RefreshCw size={16} />
                   Refresh
                 </button>
@@ -235,7 +309,13 @@ export default function Dashboard() {
             {/* Chart */}
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={portfolioData}>
+                <LineChart
+                  data={
+                    portfolioHistory.length > 0
+                      ? portfolioHistory
+                      : [{ name: "Today", value: totalBalance }]
+                  }
+                >
                   <CartesianGrid strokeDasharray="3 3" stroke="#e0e7ff" />
                   <XAxis dataKey="name" stroke="#9ca3af" />
                   <YAxis stroke="#9ca3af" />
@@ -266,15 +346,10 @@ export default function Dashboard() {
                 </span>
               </p>
             </div>
-          </motion.div>
+          </AnimatedCard>
 
           {/* Portfolio Allocation */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="bg-white rounded-xl p-8 border border-blue-100 shadow-sm"
-          >
+          <AnimatedCard className="bg-white rounded-xl p-8 border border-blue-100 shadow-sm">
             <h3 className="text-lg font-semibold text-gray-900 mb-6">
               Portfolio Allocation
             </h3>
@@ -323,16 +398,11 @@ export default function Dashboard() {
                 </div>
               ))}
             </div>
-          </motion.div>
+          </AnimatedCard>
         </div>
 
         {/* Assets Overview */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.3 }}
-          className="bg-white rounded-xl border border-blue-100 shadow-sm overflow-hidden mb-8"
-        >
+        <AnimatedCard className="bg-white rounded-xl border border-blue-100 shadow-sm overflow-hidden mb-8">
           <div className="p-6 border-b border-blue-100">
             <h3 className="text-lg font-semibold text-gray-900">Your Assets</h3>
           </div>
@@ -362,8 +432,10 @@ export default function Dashboard() {
               </thead>
               <tbody>
                 {assets.map((asset) => {
-                  const value = asset.balance * asset.price;
-                  const percentage = (value / totalBalance) * 100;
+                  const value = asset.balance_usd || 0;
+                  const percentage =
+                    totalBalance > 0 ? (value / totalBalance) * 100 : 0;
+                  const change24h = asset.price_change_24h || 0;
                   return (
                     <tr
                       key={asset.id}
@@ -378,17 +450,21 @@ export default function Dashboard() {
                         </div>
                       </td>
                       <td className="px-6 py-4 text-gray-900">
-                        {asset.balance.toFixed(6)}
+                        {asset.balance.toFixed(8)}
                       </td>
                       <td className="px-6 py-4">
                         <motion.div
-                          key={asset.price}
+                          key={`${asset.symbol}-${asset.price_usd}`}
                           initial={{ scale: 1 }}
                           animate={{ scale: 1 }}
                           transition={{ duration: 0.3 }}
                           className="text-gray-900"
                         >
-                          ${asset.price.toLocaleString()}
+                          $
+                          {(asset.price_usd || 0).toLocaleString("en-US", {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          })}
                         </motion.div>
                       </td>
                       <td className="px-6 py-4 font-medium text-gray-900">
@@ -399,20 +475,21 @@ export default function Dashboard() {
                         >
                           $
                           {value.toLocaleString("en-US", {
+                            minimumFractionDigits: 2,
                             maximumFractionDigits: 2,
                           })}
                         </motion.div>
                       </td>
                       <td
-                        className={`px-6 py-4 font-medium ${asset.change24h >= 0 ? "text-green-600" : "text-red-600"}`}
+                        className={`px-6 py-4 font-medium ${change24h >= 0 ? "text-green-600" : "text-red-600"}`}
                       >
                         <motion.div
                           initial={{ opacity: 0.8 }}
                           animate={{ opacity: 1 }}
                           transition={{ duration: 0.3 }}
                         >
-                          {asset.change24h >= 0 ? "↑ " : "↓ "}
-                          {Math.abs(asset.change24h).toFixed(2)}%
+                          {change24h >= 0 ? "↑ " : "↓ "}
+                          {Math.abs(change24h).toFixed(2)}%
                         </motion.div>
                       </td>
                       <td className="px-6 py-4 text-gray-900">
@@ -424,15 +501,10 @@ export default function Dashboard() {
               </tbody>
             </table>
           </div>
-        </motion.div>
+        </AnimatedCard>
 
         {/* Transaction History */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.4 }}
-          className="bg-white rounded-xl border border-blue-100 shadow-sm"
-        >
+        <AnimatedCard className="bg-white rounded-xl border border-blue-100 shadow-sm">
           <div className="p-6 border-b border-blue-100">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-lg font-semibold text-gray-900">
@@ -493,49 +565,76 @@ export default function Dashboard() {
                     <div className="flex items-center gap-4">
                       <div
                         className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                          tx.type === "receive"
+                          tx.tx_type === "receive"
                             ? "bg-green-100"
-                            : tx.type === "send"
+                            : tx.tx_type === "send"
                               ? "bg-red-100"
                               : "bg-blue-100"
                         }`}
                       >
-                        {tx.type === "receive" && (
+                        {tx.tx_type === "receive" && (
                           <ArrowDownLeft className="text-green-600" />
                         )}
-                        {tx.type === "send" && (
+                        {tx.tx_type === "send" && (
                           <ArrowUpRight className="text-red-600" />
                         )}
-                        {tx.type === "swap" && (
+                        {tx.tx_type === "swap" && (
                           <ArrowLeftRight className="text-blue-600" />
                         )}
                       </div>
                       <div>
                         <p className="font-medium text-gray-900 capitalize">
-                          {tx.type}
+                          {tx.tx_type}
                         </p>
                         <div className="flex items-center gap-2 text-sm text-gray-600 mt-1">
-                          <span className="font-mono">{tx.hash}</span>
-                          <a
-                            href="#"
-                            className="text-blue-600 hover:text-blue-700"
-                            onClick={(e) => e.preventDefault()}
-                          >
-                            <ExternalLink size={14} />
-                          </a>
+                          <span className="font-mono">
+                            {tx.tx_hash
+                              ? tx.tx_hash.substring(0, 16) + "..."
+                              : "Pending"}
+                          </span>
+                          {tx.tx_hash && (
+                            <a
+                              href={`https://etherscan.io/tx/${tx.tx_hash}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:text-blue-700"
+                            >
+                              <ExternalLink size={14} />
+                            </a>
+                          )}
                         </div>
-                        <p className="text-xs text-gray-500 mt-1">{tx.date}</p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {new Date(tx.created_at).toLocaleDateString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </p>
                       </div>
                     </div>
                     <div className="text-right">
                       <p className="font-medium text-gray-900">
-                        {tx.type === "receive" ? "+" : "-"}
-                        {tx.amount} {tx.symbol}
+                        {tx.tx_type === "receive" ? "+" : "-"}
+                        {tx.amount.toFixed(8)} {tx.symbol}
                       </p>
                       <p className="text-sm text-gray-600">
-                        ${tx.usdValue.toLocaleString()}
+                        $
+                        {(tx.amount_usd || 0).toLocaleString("en-US", {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}
                       </p>
-                      <span className="inline-block mt-2 px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-700">
+                      <span
+                        className={`inline-block mt-2 px-2 py-1 rounded text-xs font-medium ${
+                          tx.status === "confirmed"
+                            ? "bg-green-100 text-green-700"
+                            : tx.status === "pending"
+                              ? "bg-yellow-100 text-yellow-700"
+                              : "bg-red-100 text-red-700"
+                        }`}
+                      >
                         {tx.status}
                       </span>
                     </div>
@@ -556,7 +655,7 @@ export default function Dashboard() {
               </Button>
             </div>
           )}
-        </motion.div>
+        </AnimatedCard>
       </main>
     </div>
   );
