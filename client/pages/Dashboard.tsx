@@ -29,11 +29,11 @@ const portfolioData = [
 
 const walletAddress = "1A1z7agoat4xNAavZY2YoW6XwMEUpnqRDM";
 
-const assets = [
-  { id: 1, symbol: "BTC", name: "Bitcoin", balance: 0.542, price: 42500, change24h: 5.2 },
-  { id: 2, symbol: "ETH", name: "Ethereum", balance: 2.148, price: 2280, change24h: -2.1 },
-  { id: 3, symbol: "USDC", name: "USD Coin", balance: 5000, price: 1.0, change24h: 0.1 },
-  { id: 4, symbol: "ADA", name: "Cardano", balance: 1500, price: 0.98, change24h: 3.5 },
+const baseAssets = [
+  { id: 1, symbol: "BTC", name: "Bitcoin", balance: 0.542 },
+  { id: 2, symbol: "ETH", name: "Ethereum", balance: 2.148 },
+  { id: 3, symbol: "USDC", name: "USD Coin", balance: 5000 },
+  { id: 4, symbol: "ADA", name: "Cardano", balance: 1500 },
 ];
 
 const transactions = [
