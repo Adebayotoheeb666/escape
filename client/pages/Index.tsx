@@ -124,7 +124,7 @@ export default function Index() {
             whileInView={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8 }}
             viewport={{ once: true }}
-            className="flex items-center justify-center"
+            className="flex items-center justify-center overflow-hidden"
           >
             <motion.div
               initial={{ y: 0 }}
