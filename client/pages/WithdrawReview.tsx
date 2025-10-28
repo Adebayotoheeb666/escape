@@ -67,13 +67,39 @@ export default function WithdrawReview() {
     alert("Transaction hash copied!");
   };
 
-  const handleConfirm = () => {
-    if (confirmCheckboxes.verify && confirmCheckboxes.irreversible) {
-      setStep("processing");
-      // Simulate processing
+  const handleConfirm = async () => {
+    if (!confirmCheckboxes.verify || !confirmCheckboxes.irreversible) {
+      return;
+    }
+
+    if (!authUser || !dbUser || !walletId) {
+      setError("Authentication required");
+      return;
+    }
+
+    setStep("processing");
+    try {
+      const result = await createWithdrawalRequest(
+        dbUser.id,
+        walletId,
+        crypto,
+        amount,
+        amount * price,
+        address,
+        network,
+        networkFee,
+        networkFee * price
+      );
+
+      // Simulate processing delay then show success
       setTimeout(() => {
+        setTxHash(result.id); // Use request ID as reference
         setStep("success");
-      }, 3000);
+      }, 2000);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Withdrawal failed";
+      setError(message);
+      setStep("failure");
     }
   };
 
