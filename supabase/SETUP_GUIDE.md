@@ -28,10 +28,12 @@ Complete guide to set up the CryptoVault Supabase schema and integrate it with y
 
 Your environment variables are already set:
 
+Set these in your hosting provider's environment settings (do not commit values to the repo):
+
 ```env
-VITE_SUPABASE_URL=https://rdrmehocsdmadhostbgz.supabase.co
-VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-NEXT_SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+VITE_SUPABASE_URL=<set in host env>
+VITE_SUPABASE_ANON_KEY=<set in host env>
+NEXT_SUPABASE_SERVICE_ROLE_KEY=<set in host env>
 ```
 
 These are already configured in your project environment.
@@ -128,10 +130,10 @@ RLS is already enabled in the schema.sql file. Verify in Supabase:
 Your `.env` file should already have:
 
 ```env
-# Supabase URLs and Keys
-VITE_SUPABASE_URL=https://rdrmehocsdmadhostbgz.supabase.co
-VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-NEXT_SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+# Supabase URLs and Keys (configure in host env, not in files)
+VITE_SUPABASE_URL=<set in host env>
+VITE_SUPABASE_ANON_KEY=<set in host env>
+NEXT_SUPABASE_SERVICE_ROLE_KEY=<set in host env>
 ```
 
 These are available to the app automatically.
