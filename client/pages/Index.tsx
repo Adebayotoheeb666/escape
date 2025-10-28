@@ -77,21 +77,21 @@ export default function Index() {
               viewport={{ once: true }}
               className="flex flex-col sm:flex-row gap-4 mb-12"
             >
-              <Button
+              <AnimatedButton
                 onClick={handleConnectWallet}
                 size="lg"
                 className="bg-blue-600 hover:bg-blue-700 text-white text-lg px-8 py-6 h-auto rounded-lg flex items-center justify-center gap-2"
               >
                 <span>Link Your Coinbase Wallet</span>
                 <ArrowRight size={20} />
-              </Button>
-              <Button
+              </AnimatedButton>
+              <AnimatedButton
                 variant="outline"
                 size="lg"
                 className="text-blue-600 border-blue-200 hover:bg-blue-50 text-lg px-8 py-6 h-auto rounded-lg"
               >
                 Learn More
-              </Button>
+              </AnimatedButton>
             </motion.div>
 
             {/* Trust Indicators */}
