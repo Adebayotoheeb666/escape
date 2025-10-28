@@ -25,7 +25,10 @@ export function createServer() {
   try {
     // diagnostic: ensure app.route exists
     // eslint-disable-next-line no-console
-    console.log('registering supabase health route, app.route type:', typeof (app as any).route);
+    console.log(
+      "registering supabase health route, app.route type:",
+      typeof (app as any).route,
+    );
     app.get("/api/supabase-health", handleSupabaseHealth);
   } catch (e) {
     // eslint-disable-next-line no-console

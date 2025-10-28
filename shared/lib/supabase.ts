@@ -75,10 +75,16 @@ function createSupabaseClient(): SupabaseClient<Database> {
         } as any;
       },
       async signUp(_: any) {
-        return { data: { user: null }, error: new Error("Supabase not configured") } as any;
+        return {
+          data: { user: null },
+          error: new Error("Supabase not configured"),
+        } as any;
       },
       async signInWithPassword(_: any) {
-        return { data: { user: null }, error: new Error("Supabase not configured") } as any;
+        return {
+          data: { user: null },
+          error: new Error("Supabase not configured"),
+        } as any;
       },
       async signOut() {
         return { error: null } as any;
