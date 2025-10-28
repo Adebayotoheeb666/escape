@@ -333,10 +333,7 @@ export default function Dashboard() {
         </div>
 
         {/* Assets Overview */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.3 }}
+        <AnimatedCard
           className="bg-white rounded-xl border border-blue-100 shadow-sm overflow-hidden mb-8"
         >
           <div className="p-6 border-b border-blue-100">
@@ -430,13 +427,10 @@ export default function Dashboard() {
               </tbody>
             </table>
           </div>
-        </motion.div>
+        </AnimatedCard>
 
         {/* Transaction History */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.4 }}
+        <AnimatedCard
           className="bg-white rounded-xl border border-blue-100 shadow-sm"
         >
           <div className="p-6 border-b border-blue-100">
@@ -562,7 +556,7 @@ export default function Dashboard() {
               </Button>
             </div>
           )}
-        </motion.div>
+        </AnimatedCard>
       </main>
     </div>
   );
