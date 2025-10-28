@@ -1,7 +1,7 @@
-import { createContext, useContext, useEffect, useState } from 'react';
-import { supabase } from '@shared/lib/supabase';
-import type { User as AuthUser } from '@supabase/supabase-js';
-import type { User as DBUser } from '@shared/types/database';
+import { createContext, useContext, useEffect, useState } from "react";
+import { supabase } from "@shared/lib/supabase";
+import type { User as AuthUser } from "@supabase/supabase-js";
+import type { User as DBUser } from "@shared/types/database";
 
 interface AuthContextType {
   authUser: AuthUser | null;
@@ -41,12 +41,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
           // Fetch user profile from database
           const { data: profile, error: profileError } = await supabase
-            .from('users')
-            .select('*')
-            .eq('auth_id', session.user.id)
+            .from("users")
+            .select("*")
+            .eq("auth_id", session.user.id)
             .single();
 
-          if (profileError && profileError.code !== 'PGRST116') {
+          if (profileError && profileError.code !== "PGRST116") {
             throw profileError;
           }
 
@@ -56,7 +56,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       } catch (err) {
         if (isMounted) {
-          setError(err instanceof Error ? err.message : 'Auth check failed');
+          setError(err instanceof Error ? err.message : "Auth check failed");
         }
       } finally {
         if (isMounted) {
@@ -76,9 +76,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
             // Fetch or create user profile
             const { data: profile } = await supabase
-              .from('users')
-              .select('*')
-              .eq('auth_id', session.user.id)
+              .from("users")
+              .select("*")
+              .eq("auth_id", session.user.id)
               .single();
 
             if (profile) {
@@ -86,10 +86,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             } else {
               // Create profile if doesn't exist
               const { data: newProfile } = await supabase
-                .from('users')
+                .from("users")
                 .insert({
                   auth_id: session.user.id,
-                  email: session.user.email || '',
+                  email: session.user.email || "",
                 })
                 .select()
                 .single();
@@ -104,7 +104,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
           setLoading(false);
         }
-      }
+      },
     );
 
     return () => {
@@ -129,7 +129,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         // Create user profile
         const { data: profile, error: profileError } = await supabase
-          .from('users')
+          .from("users")
           .insert({
             auth_id: data.user.id,
             email,
@@ -141,7 +141,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (profile) setDbUser(profile);
       }
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Sign up failed';
+      const message = err instanceof Error ? err.message : "Sign up failed";
       setError(message);
       throw err;
     } finally {
@@ -153,10 +153,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setError(null);
     setLoading(true);
     try {
-      const { data, error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      const { data, error: signInError } =
+        await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
 
       if (signInError) throw signInError;
 
@@ -165,16 +166,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         // Fetch user profile
         const { data: profile, error: profileError } = await supabase
-          .from('users')
-          .select('*')
-          .eq('auth_id', data.user.id)
+          .from("users")
+          .select("*")
+          .eq("auth_id", data.user.id)
           .single();
 
-        if (profileError && profileError.code !== 'PGRST116') throw profileError;
+        if (profileError && profileError.code !== "PGRST116")
+          throw profileError;
         if (profile) setDbUser(profile);
       }
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Sign in failed';
+      const message = err instanceof Error ? err.message : "Sign in failed";
       setError(message);
       throw err;
     } finally {
@@ -191,7 +193,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setAuthUser(null);
       setDbUser(null);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Sign out failed';
+      const message = err instanceof Error ? err.message : "Sign out failed";
       setError(message);
       throw err;
     }
@@ -214,7 +216,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within AuthProvider');
+    throw new Error("useAuth must be used within AuthProvider");
   }
   return context;
 }

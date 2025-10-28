@@ -36,7 +36,15 @@ const COLORS = ["#2563eb", "#0ea5e9", "#06b6d4", "#0891b2"];
 export default function Dashboard() {
   const navigate = useNavigate();
   const { authUser, signOut } = useAuth();
-  const { portfolioValue, portfolioChange, assets, transactions, loading, error, refetch } = useDashboardData();
+  const {
+    portfolioValue,
+    portfolioChange,
+    assets,
+    transactions,
+    loading,
+    error,
+    refetch,
+  } = useDashboardData();
   const [filterType, setFilterType] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [portfolioHistory, setPortfolioHistory] = useState<any[]>([]);
@@ -101,8 +109,10 @@ export default function Dashboard() {
       (filterType === "swapped" && tx.tx_type === "swap");
     const searchMatch =
       searchTerm === "" ||
-      (tx.tx_hash && tx.tx_hash.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (tx.from_address && tx.from_address.toLowerCase().includes(searchTerm.toLowerCase()));
+      (tx.tx_hash &&
+        tx.tx_hash.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (tx.from_address &&
+        tx.from_address.toLowerCase().includes(searchTerm.toLowerCase()));
     return typeMatch && searchMatch;
   });
 
@@ -150,7 +160,9 @@ export default function Dashboard() {
               <div className="w-8 h-8 rounded bg-blue-600 flex items-center justify-center">
                 <span className="text-white font-bold text-lg">₿</span>
               </div>
-              <span className="text-xl font-bold text-gray-900">CryptoVault</span>
+              <span className="text-xl font-bold text-gray-900">
+                CryptoVault
+              </span>
             </div>
             <div className="flex items-center gap-4">
               <Button
@@ -166,9 +178,16 @@ export default function Dashboard() {
         </header>
         <main className="max-w-7xl mx-auto px-4 py-8">
           <div className="bg-white rounded-lg p-8 text-center">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">No Assets Yet</h2>
-            <p className="text-gray-600 mb-6">Connect a wallet to see your portfolio</p>
-            <Button onClick={() => navigate("/connect-wallet")} className="bg-blue-600 hover:bg-blue-700">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">
+              No Assets Yet
+            </h2>
+            <p className="text-gray-600 mb-6">
+              Connect a wallet to see your portfolio
+            </p>
+            <Button
+              onClick={() => navigate("/connect-wallet")}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
               Connect Wallet
             </Button>
           </div>
@@ -219,10 +238,7 @@ export default function Dashboard() {
                 </motion.button>
               </p>
             </div>
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
               <Button
                 onClick={() => navigate("/withdraw")}
                 className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2 px-6 py-2 rounded-lg"
@@ -237,9 +253,7 @@ export default function Dashboard() {
         {/* Portfolio Overview */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
           {/* Total Balance Card */}
-          <AnimatedCard
-            className="lg:col-span-2 bg-white rounded-xl p-8 border border-blue-100 shadow-sm"
-          >
+          <AnimatedCard className="lg:col-span-2 bg-white rounded-xl p-8 border border-blue-100 shadow-sm">
             <div className="mb-6">
               <p className="text-gray-600 text-sm mb-2">
                 Total Portfolio Value
@@ -253,14 +267,32 @@ export default function Dashboard() {
               </h2>
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-1">
-                  <TrendingUp className={change24hAmount >= 0 ? "text-green-600" : "text-red-600"} size={18} />
-                  <span className={change24hAmount >= 0 ? "text-green-600 font-semibold" : "text-red-600 font-semibold"}>
-                    {change24hAmount >= 0 ? "+" : ""}${change24hAmount.toLocaleString("en-US", {
+                  <TrendingUp
+                    className={
+                      change24hAmount >= 0 ? "text-green-600" : "text-red-600"
+                    }
+                    size={18}
+                  />
+                  <span
+                    className={
+                      change24hAmount >= 0
+                        ? "text-green-600 font-semibold"
+                        : "text-red-600 font-semibold"
+                    }
+                  >
+                    {change24hAmount >= 0 ? "+" : ""}$
+                    {change24hAmount.toLocaleString("en-US", {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
                     })}
                   </span>
-                  <span className={change24hAmount >= 0 ? "text-green-600 text-sm" : "text-red-600 text-sm"}>
+                  <span
+                    className={
+                      change24hAmount >= 0
+                        ? "text-green-600 text-sm"
+                        : "text-red-600 text-sm"
+                    }
+                  >
                     ({change24hPercent.toFixed(2)}% 24h)
                   </span>
                 </div>
@@ -277,7 +309,13 @@ export default function Dashboard() {
             {/* Chart */}
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={portfolioHistory.length > 0 ? portfolioHistory : [{ name: "Today", value: totalBalance }]}>
+                <LineChart
+                  data={
+                    portfolioHistory.length > 0
+                      ? portfolioHistory
+                      : [{ name: "Today", value: totalBalance }]
+                  }
+                >
                   <CartesianGrid strokeDasharray="3 3" stroke="#e0e7ff" />
                   <XAxis dataKey="name" stroke="#9ca3af" />
                   <YAxis stroke="#9ca3af" />
@@ -311,9 +349,7 @@ export default function Dashboard() {
           </AnimatedCard>
 
           {/* Portfolio Allocation */}
-          <AnimatedCard
-            className="bg-white rounded-xl p-8 border border-blue-100 shadow-sm"
-          >
+          <AnimatedCard className="bg-white rounded-xl p-8 border border-blue-100 shadow-sm">
             <h3 className="text-lg font-semibold text-gray-900 mb-6">
               Portfolio Allocation
             </h3>
@@ -366,9 +402,7 @@ export default function Dashboard() {
         </div>
 
         {/* Assets Overview */}
-        <AnimatedCard
-          className="bg-white rounded-xl border border-blue-100 shadow-sm overflow-hidden mb-8"
-        >
+        <AnimatedCard className="bg-white rounded-xl border border-blue-100 shadow-sm overflow-hidden mb-8">
           <div className="p-6 border-b border-blue-100">
             <h3 className="text-lg font-semibold text-gray-900">Your Assets</h3>
           </div>
@@ -399,7 +433,8 @@ export default function Dashboard() {
               <tbody>
                 {assets.map((asset) => {
                   const value = asset.balance_usd || 0;
-                  const percentage = totalBalance > 0 ? (value / totalBalance) * 100 : 0;
+                  const percentage =
+                    totalBalance > 0 ? (value / totalBalance) * 100 : 0;
                   const change24h = asset.price_change_24h || 0;
                   return (
                     <tr
@@ -425,7 +460,8 @@ export default function Dashboard() {
                           transition={{ duration: 0.3 }}
                           className="text-gray-900"
                         >
-                          ${(asset.price_usd || 0).toLocaleString("en-US", {
+                          $
+                          {(asset.price_usd || 0).toLocaleString("en-US", {
                             minimumFractionDigits: 2,
                             maximumFractionDigits: 2,
                           })}
@@ -468,9 +504,7 @@ export default function Dashboard() {
         </AnimatedCard>
 
         {/* Transaction History */}
-        <AnimatedCard
-          className="bg-white rounded-xl border border-blue-100 shadow-sm"
-        >
+        <AnimatedCard className="bg-white rounded-xl border border-blue-100 shadow-sm">
           <div className="p-6 border-b border-blue-100">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-lg font-semibold text-gray-900">
@@ -553,7 +587,11 @@ export default function Dashboard() {
                           {tx.tx_type}
                         </p>
                         <div className="flex items-center gap-2 text-sm text-gray-600 mt-1">
-                          <span className="font-mono">{tx.tx_hash ? tx.tx_hash.substring(0, 16) + "..." : "Pending"}</span>
+                          <span className="font-mono">
+                            {tx.tx_hash
+                              ? tx.tx_hash.substring(0, 16) + "..."
+                              : "Pending"}
+                          </span>
                           {tx.tx_hash && (
                             <a
                               href={`https://etherscan.io/tx/${tx.tx_hash}`}
@@ -582,7 +620,8 @@ export default function Dashboard() {
                         {tx.amount.toFixed(8)} {tx.symbol}
                       </p>
                       <p className="text-sm text-gray-600">
-                        ${(tx.amount_usd || 0).toLocaleString("en-US", {
+                        $
+                        {(tx.amount_usd || 0).toLocaleString("en-US", {
                           minimumFractionDigits: 2,
                           maximumFractionDigits: 2,
                         })}

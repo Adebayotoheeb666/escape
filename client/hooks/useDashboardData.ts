@@ -1,19 +1,19 @@
-import { useEffect, useState } from 'react';
-import { useAuth } from '@/context/AuthContext';
+import { useEffect, useState } from "react";
+import { useAuth } from "@/context/AuthContext";
 import {
   getPortfolioValue,
   getPortfolio24hChange,
   getUserAssets,
   getTransactionHistory,
   getLatestPrice,
-} from '@shared/lib/supabase';
+} from "@shared/lib/supabase";
 import type {
   PortfolioValue,
   PortfolioChange,
   Asset,
   Transaction,
   PriceHistory,
-} from '@shared/types/database';
+} from "@shared/types/database";
 
 interface DashboardData {
   portfolioValue: PortfolioValue | null;
@@ -28,8 +28,11 @@ interface DashboardData {
 
 export function useDashboardData(): DashboardData {
   const { authUser, dbUser } = useAuth();
-  const [portfolioValue, setPortfolioValue] = useState<PortfolioValue | null>(null);
-  const [portfolioChange, setPortfolioChange] = useState<PortfolioChange | null>(null);
+  const [portfolioValue, setPortfolioValue] = useState<PortfolioValue | null>(
+    null,
+  );
+  const [portfolioChange, setPortfolioChange] =
+    useState<PortfolioChange | null>(null);
   const [assets, setAssets] = useState<Asset[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [prices, setPrices] = useState<Record<string, PriceHistory | null>>({});
@@ -67,9 +70,10 @@ export function useDashboardData(): DashboardData {
 
       setPrices(priceData);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to fetch dashboard data';
+      const message =
+        err instanceof Error ? err.message : "Failed to fetch dashboard data";
       setError(message);
-      console.error('Dashboard data fetch error:', err);
+      console.error("Dashboard data fetch error:", err);
     } finally {
       setLoading(false);
     }

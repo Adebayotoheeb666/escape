@@ -19,7 +19,8 @@ export default function WithdrawReview() {
   const { authUser, dbUser } = useAuth();
 
   const state = location.state || {};
-  const { crypto, amount, address, network, email, saveEmail, walletId } = state;
+  const { crypto, amount, address, network, email, saveEmail, walletId } =
+    state;
 
   const [step, setStep] = useState<
     "review" | "confirming" | "processing" | "success" | "failure"
@@ -88,7 +89,7 @@ export default function WithdrawReview() {
         address,
         network,
         networkFee,
-        networkFee * price
+        networkFee * price,
       );
 
       // Simulate processing delay then show success

@@ -36,7 +36,8 @@ export function useRealtimePrices(updateInterval = 30000) {
           newPrices[symbol] = {
             price: priceData.price_usd,
             change24h: priceData.price_change_24h || 0,
-            previousPrice: priceData.price_usd - (priceData.price_change_24h || 0),
+            previousPrice:
+              priceData.price_usd - (priceData.price_change_24h || 0),
           };
         }
       }
@@ -45,7 +46,8 @@ export function useRealtimePrices(updateInterval = 30000) {
         setPrices(newPrices);
       }
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Failed to fetch prices";
+      const message =
+        err instanceof Error ? err.message : "Failed to fetch prices";
       setError(message);
       console.error("Price update error:", err);
     } finally {
