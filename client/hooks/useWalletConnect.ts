@@ -1,12 +1,16 @@
 import { useState, useCallback, useEffect } from "react";
 import { ethers } from "ethers";
 import Web3Modal from "web3modal";
+import { supabase } from "@shared/lib/supabase";
+import { createWallet } from "@shared/lib/supabase";
+import { useAuth } from "@/context/AuthContext";
 
 interface WalletState {
   address: string | null;
   chainId: number | null;
   isConnected: boolean;
   provider: ethers.providers.Web3Provider | null;
+  walletId?: string | null;
 }
 
 interface UseWalletConnectReturn extends WalletState {
@@ -14,6 +18,7 @@ interface UseWalletConnectReturn extends WalletState {
   disconnect: () => Promise<void>;
   signMessage: (message: string) => Promise<string | null>;
   getBalance: () => Promise<string | null>;
+  verifyAndSaveWallet: () => Promise<boolean>;
   loading: boolean;
   error: string | null;
 }
@@ -59,11 +64,13 @@ function initializeWeb3Modal(): Web3Modal {
 }
 
 export function useWalletConnect(): UseWalletConnectReturn {
+  const { authUser } = useAuth();
   const [wallet, setWallet] = useState<WalletState>({
     address: null,
     chainId: null,
     isConnected: false,
     provider: null,
+    walletId: null,
   });
 
   const [loading, setLoading] = useState(false);
@@ -187,12 +194,79 @@ export function useWalletConnect(): UseWalletConnectReturn {
     }
   }, [wallet.provider, wallet.address]);
 
+  const verifyAndSaveWallet = useCallback(async (): Promise<boolean> => {
+    if (!authUser) {
+      setError("User not authenticated");
+      return false;
+    }
+
+    if (!wallet.address || !wallet.provider) {
+      setError("Wallet not connected");
+      return false;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Create verification message
+      const message = `Verify wallet ownership for CryptoVault\nWallet: ${wallet.address}\nTimestamp: ${Date.now()}`;
+
+      // Sign the message with the wallet
+      const signer = wallet.provider.getSigner();
+      const signature = await signer.signMessage(message);
+
+      // Verify the signature matches the address
+      const recoveredAddress = ethers.utils.verifyMessage(message, signature);
+      if (recoveredAddress.toLowerCase() !== wallet.address.toLowerCase()) {
+        throw new Error("Wallet verification failed - signature mismatch");
+      }
+
+      // Determine wallet type from provider
+      let walletType = "metamask";
+      if (window.ethereum?.isMetaMask === false) {
+        walletType = "walletconnect";
+      }
+
+      // Save wallet to Supabase
+      const savedWallet = await createWallet(
+        authUser.id,
+        wallet.address,
+        walletType,
+        `${walletType} Wallet`,
+      );
+
+      if (savedWallet && savedWallet.id) {
+        setWallet((prev) => ({
+          ...prev,
+          walletId: savedWallet.id,
+        }));
+
+        // Store wallet ID in localStorage
+        localStorage.setItem("walletId", savedWallet.id);
+
+        return true;
+      }
+
+      throw new Error("Failed to save wallet to database");
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Failed to verify and save wallet";
+      setError(message);
+      console.error("Wallet verification error:", err);
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, [authUser, wallet.address, wallet.provider]);
+
   return {
     ...wallet,
     connect: connectWallet,
     disconnect,
     signMessage,
     getBalance,
+    verifyAndSaveWallet,
     loading,
     error,
   };
