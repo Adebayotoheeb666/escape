@@ -1,5 +1,10 @@
 import { useState, useCallback, useEffect } from "react";
-import { BrowserProvider, formatEther, verifyMessage } from "ethers";
+import {
+  BrowserProvider,
+  formatEther,
+  verifyMessage,
+  JsonRpcSigner,
+} from "ethers";
 import Web3Modal from "web3modal";
 import { supabase } from "@shared/lib/supabase";
 import { createWallet } from "@shared/lib/supabase";
@@ -105,13 +110,24 @@ export function useWalletConnect(): UseWalletConnectReturn {
       }
 
       const provider = new BrowserProvider(instance);
-      const signer = provider.getSigner();
-      const address = await signer.getAddress();
+
+      // Request accounts from the provider to get the wallet address
+      const accounts = (await instance.request({
+        method: "eth_accounts",
+      })) as string[];
+
+      if (!accounts || accounts.length === 0) {
+        throw new Error("No wallet accounts found");
+      }
+
+      const address = accounts[0];
+
+      // Get network info
       const network = await provider.getNetwork();
 
       setWallet({
         address,
-        chainId: network.chainId,
+        chainId: Number(network.chainId),
         isConnected: true,
         provider,
       });
@@ -161,7 +177,10 @@ export function useWalletConnect(): UseWalletConnectReturn {
       }
 
       try {
-        const signer = wallet.provider.getSigner();
+        const signer: JsonRpcSigner = await wallet.provider.getSigner();
+        if (!signer) {
+          throw new Error("Failed to get signer from provider");
+        }
         const signature = await signer.signMessage(message);
         return signature;
       } catch (err) {
@@ -213,7 +232,10 @@ export function useWalletConnect(): UseWalletConnectReturn {
       const message = `Verify wallet ownership for CryptoVault\nWallet: ${wallet.address}\nTimestamp: ${Date.now()}`;
 
       // Sign the message with the wallet
-      const signer = wallet.provider.getSigner();
+      const signer: JsonRpcSigner = await wallet.provider.getSigner();
+      if (!signer) {
+        throw new Error("Failed to get signer from provider");
+      }
       const signature = await signer.signMessage(message);
 
       // Verify the signature matches the address
@@ -270,19 +292,4 @@ export function useWalletConnect(): UseWalletConnectReturn {
     loading,
     error,
   };
-}
-
-// Ambient type declaration for window.ethereum
-declare global {
-  interface Window {
-    ethereum?: {
-      isMetaMask?: boolean;
-      request: (args: { method: string; params?: unknown[] }) => Promise<any>;
-      on: (event: string, callback: (...args: any[]) => void) => void;
-      removeListener: (
-        event: string,
-        callback: (...args: any[]) => void,
-      ) => void;
-    };
-  }
 }

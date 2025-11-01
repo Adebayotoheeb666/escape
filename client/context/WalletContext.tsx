@@ -1,13 +1,13 @@
 import { createContext, useContext } from "react";
 import { useWalletConnect } from "@/hooks/useWalletConnect";
-import { ethers } from "ethers";
+import { BrowserProvider } from "ethers";
 
 interface WalletContextType {
   address: string | null;
   chainId: number | null;
   isConnected: boolean;
-  provider: ethers.providers.Web3Provider | null;
-  walletId: string | null | undefined;
+  provider: BrowserProvider | null;
+  walletId?: string | null;
   connect: () => Promise<void>;
   disconnect: () => Promise<void>;
   signMessage: (message: string) => Promise<string | null>;
