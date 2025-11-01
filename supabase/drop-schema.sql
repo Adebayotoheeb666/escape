@@ -5,23 +5,7 @@
 -- Use with caution - this is destructive and cannot be undone!
 -- ==========================================
 
--- Step 1: Disable RLS to allow drops
-ALTER TABLE IF EXISTS public.users DISABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS public.sessions DISABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS public.device_trust DISABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS public.login_attempts DISABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS public.api_keys DISABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS public.wallets DISABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS public.assets DISABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS public.transactions DISABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS public.price_history DISABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS public.withdrawal_requests DISABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS public.portfolio_snapshots DISABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS public.price_alerts DISABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS public.notification_logs DISABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS public.audit_logs DISABLE ROW LEVEL SECURITY;
-
--- Step 2: Drop all RLS policies
+-- Step 1: Drop all RLS policies (safely)
 DROP POLICY IF EXISTS "Users can view their own profile" ON public.users;
 DROP POLICY IF EXISTS "Users can update their own profile" ON public.users;
 DROP POLICY IF EXISTS "Users can view their own sessions" ON public.sessions;
