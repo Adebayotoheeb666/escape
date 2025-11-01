@@ -171,6 +171,9 @@ export function useWalletConnect(): UseWalletConnectReturn {
 
       try {
         const signer = wallet.provider.getSigner();
+        if (!signer) {
+          throw new Error("Failed to get signer from provider");
+        }
         const signature = await signer.signMessage(message);
         return signature;
       } catch (err) {
