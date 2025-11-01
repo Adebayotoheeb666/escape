@@ -64,11 +64,13 @@ function initializeWeb3Modal(): Web3Modal {
 }
 
 export function useWalletConnect(): UseWalletConnectReturn {
+  const { authUser } = useAuth();
   const [wallet, setWallet] = useState<WalletState>({
     address: null,
     chainId: null,
     isConnected: false,
     provider: null,
+    walletId: null,
   });
 
   const [loading, setLoading] = useState(false);
