@@ -39,7 +39,7 @@ DROP TRIGGER IF EXISTS withdrawal_requests_log_status ON public.withdrawal_reque
 DROP TRIGGER IF EXISTS withdrawal_requests_validate ON public.withdrawal_requests;
 DROP TRIGGER IF EXISTS transactions_create_snapshot ON public.transactions;
 
--- Step 4: Drop all trigger functions
+-- Step 3: Drop all trigger functions
 DROP FUNCTION IF EXISTS public.update_users_timestamp() CASCADE;
 DROP FUNCTION IF EXISTS public.update_wallets_timestamp() CASCADE;
 DROP FUNCTION IF EXISTS public.update_assets_timestamp() CASCADE;
