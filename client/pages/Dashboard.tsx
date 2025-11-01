@@ -59,6 +59,13 @@ export default function Dashboard() {
     }
   }, [authUser, navigate]);
 
+  // Set primary wallet from connected wallet
+  useEffect(() => {
+    if (walletAddress) {
+      setPrimaryWallet(walletAddress);
+    }
+  }, [walletAddress]);
+
   // Fetch portfolio history for chart
   useEffect(() => {
     async function fetchHistory() {
