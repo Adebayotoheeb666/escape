@@ -2,6 +2,7 @@ import { RequestHandler } from "express";
 import { createWithdrawalRequest, getWalletAssets } from "../../shared/lib/supabase";
 import { supabase } from "../../shared/lib/supabase";
 import { z } from "zod";
+import type { User, Asset, WithdrawalRequest as WithdrawalRequestType } from "../../shared/types/database";
 
 // Validation schema for withdrawal request
 const withdrawalSchema = z.object({
@@ -75,11 +76,12 @@ export const handleWithdraw: RequestHandler<
       withdrawalData;
 
     // Get user from database
-    const { data: user, error: userError } = await supabase
+    const { data: userRaw, error: userError } = await supabase
       .from("users")
       .select("id, email")
       .eq("auth_id", userId)
       .single();
+    const user = userRaw as User;
 
     if (userError || !user) {
       res.status(404).json({
@@ -90,14 +92,14 @@ export const handleWithdraw: RequestHandler<
     }
 
     // Verify wallet belongs to user
-    const { data: wallet, error: walletError } = await supabase
+    const { data: walletRaw, error: walletError } = await supabase
       .from("wallets")
       .select("id, user_id")
       .eq("id", walletId)
       .eq("user_id", user.id)
       .single();
 
-    if (walletError || !wallet) {
+    if (walletError || !walletRaw) {
       res.status(403).json({
         success: false,
         error: "Wallet not found or does not belong to user",
@@ -105,8 +107,11 @@ export const handleWithdraw: RequestHandler<
       return;
     }
 
+    const wallet = walletRaw;
+
     // Get wallet assets to check balance
-    const assets = await getWalletAssets(walletId);
+    const assetsRaw = await getWalletAssets(walletId);
+    const assets = assetsRaw as Asset[];
     const asset = assets.find(
       (a) => a.symbol.toUpperCase() === symbol.toUpperCase(),
     );
@@ -141,7 +146,7 @@ export const handleWithdraw: RequestHandler<
     }
 
     // Create withdrawal request
-    const withdrawal = await createWithdrawalRequest(
+    const withdrawalRaw = await createWithdrawalRequest(
       user.id,
       walletId,
       symbol,
@@ -152,8 +157,10 @@ export const handleWithdraw: RequestHandler<
       feeAmount,
       feeUsd,
     );
+    const withdrawal = withdrawalRaw as WithdrawalRequestType;
 
     // Log audit event
+    // @ts-ignore
     await supabase.rpc("log_audit_event", {
       p_user_id: user.id,
       p_action: "WITHDRAWAL_REQUESTED",
@@ -166,7 +173,7 @@ export const handleWithdraw: RequestHandler<
         network,
         fee_usd: feeUsd,
       },
-    });
+    } as Record<string, any>);
 
     res.status(201).json({
       success: true,
