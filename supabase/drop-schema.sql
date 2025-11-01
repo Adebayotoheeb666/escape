@@ -86,7 +86,7 @@ DROP TABLE IF EXISTS public.wallets CASCADE;
 DROP TABLE IF EXISTS public.login_attempts CASCADE;
 DROP TABLE IF EXISTS public.users CASCADE;
 
--- Step 7: Revoke grants (cleanup)
+-- Step 5: Revoke grants (cleanup)
 REVOKE EXECUTE ON ALL FUNCTIONS IN SCHEMA public FROM authenticated;
 REVOKE SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public FROM authenticated;
 
