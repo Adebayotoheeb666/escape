@@ -1,6 +1,6 @@
 import { RequestHandler } from "express";
-import { createWithdrawalRequest, getWalletAssets } from "@shared/lib/supabase";
-import { supabase } from "@shared/lib/supabase";
+import { createWithdrawalRequest, getWalletAssets } from "../../shared/lib/supabase";
+import { supabase } from "../../shared/lib/supabase";
 import { z } from "zod";
 
 // Validation schema for withdrawal request

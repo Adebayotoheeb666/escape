@@ -1,5 +1,5 @@
 import { RequestHandler } from "express";
-import { supabase } from "@shared/lib/supabase";
+import { supabase } from "../../shared/lib/supabase";
 
 interface MaintenanceResponse {
   success: boolean;
