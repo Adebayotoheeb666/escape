@@ -92,7 +92,11 @@ export function createServer() {
   const rateWindows = new Map<string, { count: number; resetAt: number }>();
   function authRateLimiter(req: any, res: any, next: any) {
     try {
-      const ip = (req.headers["x-forwarded-for"] || req.socket.remoteAddress || "unknown").toString();
+      const ip = (
+        req.headers["x-forwarded-for"] ||
+        req.socket.remoteAddress ||
+        "unknown"
+      ).toString();
       const key = `auth:${ip}`;
       const now = Date.now();
       const WINDOW_MS = 60 * 1000; // 1 minute
@@ -105,7 +109,9 @@ export function createServer() {
       if (entry.count >= MAX) {
         const retryAfter = Math.ceil((entry.resetAt - now) / 1000);
         res.setHeader("Retry-After", String(retryAfter));
-        return res.status(429).json({ error: "Too many requests. Please try again later." });
+        return res
+          .status(429)
+          .json({ error: "Too many requests. Please try again later." });
       }
       entry.count += 1;
       rateWindows.set(key, entry);

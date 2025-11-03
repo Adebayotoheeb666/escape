@@ -37,14 +37,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(true);
       try {
         // Try server session (cookie-based). Include credentials to ensure cookies are sent.
-        const resp = await fetch("/api/auth/session", { credentials: "include" });
+        const resp = await fetch("/api/auth/session", {
+          credentials: "include",
+        });
         if (resp.ok) {
           const data = await resp.json();
           if (mounted && data.user) {
             setAuthUser(data.user);
             setDbUser(data.profile || null);
             try {
-              localStorage.setItem("auth_session", JSON.stringify({ user: data.user, profile: data.profile }));
+              localStorage.setItem(
+                "auth_session",
+                JSON.stringify({ user: data.user, profile: data.profile }),
+              );
             } catch {}
             setLoading(false);
             return;
@@ -159,11 +164,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setAuthUser(null);
       setDbUser(null);
       localStorage.removeItem("auth_session");
-      toast({ title: "Signed out", description: "You have been signed out", variant: "default" });
+      toast({
+        title: "Signed out",
+        description: "You have been signed out",
+        variant: "default",
+      });
     } catch (err) {
       const message = err instanceof Error ? err.message : "Sign out failed";
       setError(message);
-      toast({ title: "Sign out failed", description: message, variant: "destructive" });
+      toast({
+        title: "Sign out failed",
+        description: message,
+        variant: "destructive",
+      });
       throw err;
     }
   }
@@ -175,7 +188,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!walletAddress) {
         const msg = "Wallet address is required";
         setError(msg);
-        toast({ title: "Wallet connection", description: msg, variant: "destructive" });
+        toast({
+          title: "Wallet connection",
+          description: msg,
+          variant: "destructive",
+        });
         throw new Error(msg);
       }
 
@@ -184,7 +201,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!match) {
         const msg = "Invalid wallet address";
         setError(msg);
-        toast({ title: "Wallet connection", description: msg, variant: "destructive" });
+        toast({
+          title: "Wallet connection",
+          description: msg,
+          variant: "destructive",
+        });
         throw new Error(msg);
       }
 
@@ -196,7 +217,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!nonceResp.ok) {
         const msg = nonceData?.error || "Could not obtain nonce";
         setError(msg);
-        toast({ title: "Wallet connection", description: msg, variant: "destructive" });
+        toast({
+          title: "Wallet connection",
+          description: msg,
+          variant: "destructive",
+        });
         throw new Error(msg);
       }
 
@@ -204,7 +229,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!nonce) {
         const msg = "Invalid nonce received from server";
         setError(msg);
-        toast({ title: "Wallet connection", description: msg, variant: "destructive" });
+        toast({
+          title: "Wallet connection",
+          description: msg,
+          variant: "destructive",
+        });
         throw new Error(msg);
       }
 
@@ -213,7 +242,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!win.ethereum) {
         const msg = "No web3 provider found (e.g., MetaMask)";
         setError(msg);
-        toast({ title: "Wallet connection", description: msg, variant: "destructive" });
+        toast({
+          title: "Wallet connection",
+          description: msg,
+          variant: "destructive",
+        });
         throw new Error(msg);
       }
 
@@ -226,7 +259,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (signerAddress.toLowerCase() !== normalized) {
         const msg = "Connected wallet address does not match requested address";
         setError(msg);
-        toast({ title: "Wallet connection", description: msg, variant: "destructive" });
+        toast({
+          title: "Wallet connection",
+          description: msg,
+          variant: "destructive",
+        });
         throw new Error(msg);
       }
 
@@ -245,7 +282,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!response.ok) {
         const msg = data?.error || "Wallet connection failed";
         setError(msg);
-        toast({ title: "Wallet connection", description: msg, variant: "destructive" });
+        toast({
+          title: "Wallet connection",
+          description: msg,
+          variant: "destructive",
+        });
         throw new Error(msg);
       }
 
@@ -257,14 +298,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           "auth_session",
           JSON.stringify({ user: data.user, profile: data.profile }),
         );
-        toast({ title: "Wallet connected", description: "Your wallet was connected successfully", variant: "default" });
+        toast({
+          title: "Wallet connected",
+          description: "Your wallet was connected successfully",
+          variant: "default",
+        });
       }
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Wallet connection failed";
       setError(message);
       // show toast for unexpected errors as well
-      toast({ title: "Wallet connection", description: message, variant: "destructive" });
+      toast({
+        title: "Wallet connection",
+        description: message,
+        variant: "destructive",
+      });
       throw err;
     } finally {
       setLoading(false);

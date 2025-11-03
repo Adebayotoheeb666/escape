@@ -143,7 +143,11 @@ export const handleSignOut: RequestHandler = async (req, res) => {
   }
 };
 
-import { createNonceForAddress, getNonceForAddress, consumeNonceForAddress } from "../lib/nonce";
+import {
+  createNonceForAddress,
+  getNonceForAddress,
+  consumeNonceForAddress,
+} from "../lib/nonce";
 import { ethers } from "ethers";
 
 export function createNonceForAddressProxy(address: string) {
@@ -160,13 +164,20 @@ export const handleGetNonce: RequestHandler = async (req, res) => {
 };
 
 export const handleWalletConnect: RequestHandler = async (req, res) => {
-  const walletAddressRaw = req.body?.walletAddress || req.body?.wallet_address || "";
+  const walletAddressRaw =
+    req.body?.walletAddress || req.body?.wallet_address || "";
   const signature = String(req.body?.signature || "");
   const nonce = String(req.body?.nonce || "");
 
   // Basic logging for debugging (avoid logging full PII in production)
-  const remoteIp = (req.headers["x-forwarded-for"] || req.socket.remoteAddress || "unknown").toString();
-  console.info(`[wallet-connect] request from ${remoteIp}, payload: ${String(walletAddressRaw).slice(0,64)}`);
+  const remoteIp = (
+    req.headers["x-forwarded-for"] ||
+    req.socket.remoteAddress ||
+    "unknown"
+  ).toString();
+  console.info(
+    `[wallet-connect] request from ${remoteIp}, payload: ${String(walletAddressRaw).slice(0, 64)}`,
+  );
 
   if (!walletAddressRaw) {
     return res.status(400).json({ error: "Wallet address is required" });
@@ -226,7 +237,10 @@ export const handleWalletConnect: RequestHandler = async (req, res) => {
         .single();
 
       if (insertErr) {
-        console.error("[wallet-connect] failed to create user profile", insertErr.message);
+        console.error(
+          "[wallet-connect] failed to create user profile",
+          insertErr.message,
+        );
         return res.status(500).json({ error: "Failed to create user profile" });
       }
       profile = inserted;
@@ -234,14 +248,29 @@ export const handleWalletConnect: RequestHandler = async (req, res) => {
 
     // Create app session token (signed JWT) and set as httpOnly cookie
     try {
-      const SESSION_SECRET = process.env.SESSION_JWT_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+      const SESSION_SECRET =
+        process.env.SESSION_JWT_SECRET ||
+        process.env.SUPABASE_SERVICE_ROLE_KEY ||
+        "";
       if (!SESSION_SECRET) {
-        console.warn("SESSION_JWT_SECRET not configured; returning without session cookie");
-        return res.status(200).json({ user: { id: walletAddress }, profile, isNewWallet: !existing });
+        console.warn(
+          "SESSION_JWT_SECRET not configured; returning without session cookie",
+        );
+        return res
+          .status(200)
+          .json({
+            user: { id: walletAddress },
+            profile,
+            isNewWallet: !existing,
+          });
       }
 
       const { signSession } = require("../lib/session");
-      const token = signSession({ sub: walletAddress, uid: profile.id }, SESSION_SECRET, 60 * 60 * 2);
+      const token = signSession(
+        { sub: walletAddress, uid: profile.id },
+        SESSION_SECRET,
+        60 * 60 * 2,
+      );
 
       // Set cookie
       res.cookie("sv_session", token, {
@@ -252,14 +281,19 @@ export const handleWalletConnect: RequestHandler = async (req, res) => {
         path: "/",
       });
 
-      return res.status(200).json({ user: { id: walletAddress }, profile, isNewWallet: !existing });
+      return res
+        .status(200)
+        .json({ user: { id: walletAddress }, profile, isNewWallet: !existing });
     } catch (err) {
       console.error("[wallet-connect] session creation failed", err);
       // fallback to returning user without cookie
-      return res.status(200).json({ user: { id: walletAddress }, profile, isNewWallet: !existing });
+      return res
+        .status(200)
+        .json({ user: { id: walletAddress }, profile, isNewWallet: !existing });
     }
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Wallet connection failed";
+    const message =
+      err instanceof Error ? err.message : "Wallet connection failed";
     console.error(`[wallet-connect] error: ${message}`);
     return res.status(500).json({ error: message });
   }
@@ -290,11 +324,16 @@ export const handleGetSession: RequestHandler = async (req, res) => {
 
   try {
     const { verifySession } = require("../lib/session");
-    const SESSION_SECRET = process.env.SESSION_JWT_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY || "";
-    if (!SESSION_SECRET) return res.status(401).json({ error: "Session secret not configured" });
+    const SESSION_SECRET =
+      process.env.SESSION_JWT_SECRET ||
+      process.env.SUPABASE_SERVICE_ROLE_KEY ||
+      "";
+    if (!SESSION_SECRET)
+      return res.status(401).json({ error: "Session secret not configured" });
 
     const payload = verifySession(token, SESSION_SECRET);
-    if (!payload || !payload.sub) return res.status(401).json({ error: "Invalid session" });
+    if (!payload || !payload.sub)
+      return res.status(401).json({ error: "Invalid session" });
 
     const walletAddress = payload.sub;
 
@@ -312,9 +351,12 @@ export const handleGetSession: RequestHandler = async (req, res) => {
       return res.status(500).json({ error: profileErr.message });
     }
 
-    return res.status(200).json({ user: { id: walletAddress }, profile: profile || null });
+    return res
+      .status(200)
+      .json({ user: { id: walletAddress }, profile: profile || null });
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Failed to get session";
+    const message =
+      err instanceof Error ? err.message : "Failed to get session";
     return res.status(500).json({ error: message });
   }
 };

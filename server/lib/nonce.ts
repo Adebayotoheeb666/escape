@@ -28,7 +28,10 @@ export function getNonceForAddress(address: string): string | null {
   return rec.nonce;
 }
 
-export function consumeNonceForAddress(address: string, nonce: string): boolean {
+export function consumeNonceForAddress(
+  address: string,
+  nonce: string,
+): boolean {
   const key = address.toLowerCase();
   const rec = store.get(key);
   if (!rec) return false;
