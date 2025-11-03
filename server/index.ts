@@ -16,6 +16,7 @@ import {
   handleUnlockAccounts,
   handleLockAccounts,
 } from "./routes/maintenance";
+import { handleSchemaVerification } from "./routes/schemaVerification";
 
 export function createServer() {
   const app = express();
