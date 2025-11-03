@@ -105,10 +105,19 @@ export const handleSignIn: RequestHandler = async (req, res) => {
 };
 
 export const handleSignOut: RequestHandler = async (req, res) => {
-  const { session } = req.body;
+  // If client stored sv_session cookie, clear it
+  try {
+    // Attempt to clear cookie via Set-Cookie
+    res.cookie("sv_session", "", { httpOnly: true, maxAge: 0, path: "/" });
+  } catch (e) {
+    // ignore
+  }
 
+  const { session } = req.body || {};
+
+  // If no session provided, just return success after clearing cookie
   if (!session || !session.access_token) {
-    return res.status(400).json({ error: "Session is required" });
+    return res.status(200).json({ message: "Signed out successfully" });
   }
 
   try {
