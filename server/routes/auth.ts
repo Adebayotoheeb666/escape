@@ -148,7 +148,11 @@ export const handleWalletConnect: RequestHandler = async (req, res) => {
   // Accept either walletAddress or address for compatibility
   const walletAddress = body?.walletAddress ?? body?.address ?? null;
 
-  if (!walletAddress || typeof walletAddress !== "string" || walletAddress.trim() === "") {
+  if (
+    !walletAddress ||
+    typeof walletAddress !== "string" ||
+    walletAddress.trim() === ""
+  ) {
     return res.status(400).json({ error: "Wallet address is required" });
   }
 
