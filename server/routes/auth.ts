@@ -223,8 +223,32 @@ export const handleWalletConnect: RequestHandler = async (req, res) => {
       profile = inserted;
     }
 
-    // Return a lightweight auth user object and profile. This is app-level auth (not Supabase session).
-    return res.status(200).json({ user: { id: walletAddress }, profile, isNewWallet: !existing });
+    // Create app session token (signed JWT) and set as httpOnly cookie
+    try {
+      const SESSION_SECRET = process.env.SESSION_JWT_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+      if (!SESSION_SECRET) {
+        console.warn("SESSION_JWT_SECRET not configured; returning without session cookie");
+        return res.status(200).json({ user: { id: walletAddress }, profile, isNewWallet: !existing });
+      }
+
+      const { signSession } = require("../lib/session");
+      const token = signSession({ sub: walletAddress, uid: profile.id }, SESSION_SECRET, 60 * 60 * 2);
+
+      // Set cookie
+      res.cookie("sv_session", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 1000 * 60 * 60 * 2,
+        path: "/",
+      });
+
+      return res.status(200).json({ user: { id: walletAddress }, profile, isNewWallet: !existing });
+    } catch (err) {
+      console.error("[wallet-connect] session creation failed", err);
+      // fallback to returning user without cookie
+      return res.status(200).json({ user: { id: walletAddress }, profile, isNewWallet: !existing });
+    }
   } catch (err) {
     const message = err instanceof Error ? err.message : "Wallet connection failed";
     console.error(`[wallet-connect] error: ${message}`);
