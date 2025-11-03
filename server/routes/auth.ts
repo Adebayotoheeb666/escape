@@ -134,8 +134,26 @@ export const handleSignOut: RequestHandler = async (req, res) => {
   }
 };
 
+import { createNonceForAddress, getNonceForAddress, consumeNonceForAddress } from "../lib/nonce";
+import { ethers } from "ethers";
+
+export function createNonceForAddressProxy(address: string) {
+  return createNonceForAddress(address);
+}
+
+export const handleGetNonce: RequestHandler = async (req, res) => {
+  const address = String(req.query.address || "");
+  if (!/^0x[a-fA-F0-9]{40}$/.test(address)) {
+    return res.status(400).json({ error: "Valid wallet address is required" });
+  }
+  const nonce = createNonceForAddress(address);
+  return res.status(200).json({ nonce });
+};
+
 export const handleWalletConnect: RequestHandler = async (req, res) => {
   const walletAddressRaw = req.body?.walletAddress || req.body?.wallet_address || "";
+  const signature = String(req.body?.signature || "");
+  const nonce = String(req.body?.nonce || "");
 
   // Basic logging for debugging (avoid logging full PII in production)
   const remoteIp = (req.headers["x-forwarded-for"] || req.socket.remoteAddress || "unknown").toString();
@@ -153,75 +171,62 @@ export const handleWalletConnect: RequestHandler = async (req, res) => {
     return res.status(400).json({ error: "Valid wallet address is required" });
   }
 
+  if (!signature || !nonce) {
+    return res.status(400).json({ error: "Signature and nonce are required" });
+  }
+
+  // Verify nonce is valid for address
+  const expectedNonce = getNonceForAddress(walletAddress);
+  if (!expectedNonce || expectedNonce !== nonce) {
+    return res.status(400).json({ error: "Invalid or expired nonce" });
+  }
+
   try {
+    // verify signature
+    const recovered = ethers.verifyMessage(nonce, signature);
+    if (recovered.toLowerCase() !== walletAddress.toLowerCase()) {
+      console.warn(`[wallet-connect] signature mismatch for ${walletAddress}`);
+      return res.status(401).json({ error: "Signature verification failed" });
+    }
+
+    // consume the nonce
+    const consumed = consumeNonceForAddress(walletAddress, nonce);
+    if (!consumed) {
+      return res.status(400).json({ error: "Invalid or expired nonce" });
+    }
+
     const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
       auth: { persistSession: false },
     });
 
-    // Generate a unique email based on wallet address
-    const walletEmail = `wallet-${walletAddress.toLowerCase()}@wallet.local`;
+    // Ensure user profile exists in users table. Use auth_id = walletAddress
+    const { data: existing, error: existingErr } = await supabase
+      .from("users")
+      .select("*")
+      .eq("auth_id", walletAddress)
+      .single();
 
-    // Try to sign up first
-    let { data: signUpData, error: signUpError } =
-      await supabase.auth.admin.createUser({
-        email: walletEmail,
-        password: walletAddress,
-        email_confirm: true,
-      });
+    let profile = existing || null;
 
-    // If user already exists, sign in instead
-    if (signUpError && signUpError.message.includes("already registered")) {
-      const { data: signInData, error: signInError } =
-        await supabase.auth.signInWithPassword({
-          email: walletEmail,
-          password: walletAddress,
-        });
-
-      if (signInError) {
-        return res.status(401).json({ error: signInError.message });
-      }
-
-      if (signInData.session && signInData.user) {
-        // Fetch user profile
-        const { data: profile } = await supabase
-          .from("users")
-          .select("*")
-          .eq("auth_id", signInData.user.id)
-          .single();
-
-        return res.status(200).json({
-          session: signInData.session,
-          user: signInData.user,
-          profile: profile || null,
-          isNewWallet: false,
-        });
-      }
-    } else if (signUpError) {
-      return res.status(400).json({ error: signUpError.message });
-    }
-
-    if (signUpData && signUpData.user) {
-      // Create user profile
-      const { data: profile } = await supabase
+    if (!profile) {
+      const walletEmail = `wallet-${walletAddress.toLowerCase()}@wallet.local`;
+      const { data: inserted, error: insertErr } = await supabase
         .from("users")
-        .insert({
-          auth_id: signUpData.user.id,
-          email: walletEmail,
-        })
+        .insert({ auth_id: walletAddress, email: walletEmail })
         .select()
         .single();
 
-      return res.status(200).json({
-        user: signUpData.user,
-        profile: profile || null,
-        isNewWallet: true,
-      });
+      if (insertErr) {
+        console.error("[wallet-connect] failed to create user profile", insertErr.message);
+        return res.status(500).json({ error: "Failed to create user profile" });
+      }
+      profile = inserted;
     }
 
-    return res.status(500).json({ error: "Failed to connect wallet" });
+    // Return a lightweight auth user object and profile. This is app-level auth (not Supabase session).
+    return res.status(200).json({ user: { id: walletAddress }, profile, isNewWallet: !existing });
   } catch (err) {
-    const message =
-      err instanceof Error ? err.message : "Wallet connection failed";
+    const message = err instanceof Error ? err.message : "Wallet connection failed";
     console.error(`[wallet-connect] error: ${message}`);
     return res.status(500).json({ error: message });
   }
