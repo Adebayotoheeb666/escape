@@ -1,5 +1,11 @@
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
   AlertCircle,
@@ -76,7 +82,10 @@ const expectedTables = [
 ];
 
 const expectedFunctions = [
-  { name: "calculate_portfolio_value", description: "Calculate total portfolio value" },
+  {
+    name: "calculate_portfolio_value",
+    description: "Calculate total portfolio value",
+  },
   { name: "get_portfolio_24h_change", description: "Get 24h portfolio change" },
   { name: "get_transaction_summary", description: "Get transaction summary" },
   { name: "get_portfolio_allocation", description: "Get portfolio allocation" },
@@ -147,8 +156,12 @@ export default function SchemaVerification() {
     <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 p-6">
       <div className="max-w-6xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">Schema Verification</h1>
-          <p className="text-slate-300">Comprehensive database schema and function verification</p>
+          <h1 className="text-3xl font-bold text-white mb-2">
+            Schema Verification
+          </h1>
+          <p className="text-slate-300">
+            Comprehensive database schema and function verification
+          </p>
         </div>
 
         {error && (
@@ -167,7 +180,9 @@ export default function SchemaVerification() {
                   <div className="flex items-center gap-3">
                     {getStatusIcon(report.status)}
                     <div>
-                      <CardTitle className="text-white capitalize">{report.status}</CardTitle>
+                      <CardTitle className="text-white capitalize">
+                        {report.status}
+                      </CardTitle>
                       <CardDescription>
                         {report.status === "success"
                           ? "All checks passed"
@@ -227,7 +242,9 @@ export default function SchemaVerification() {
                           {report.checks.connectivity.status}
                         </p>
                         {report.checks.connectivity.error && (
-                          <p className="text-red-400 text-sm">{report.checks.connectivity.error}</p>
+                          <p className="text-red-400 text-sm">
+                            {report.checks.connectivity.error}
+                          </p>
                         )}
                       </div>
                     </div>
@@ -249,23 +266,28 @@ export default function SchemaVerification() {
                     {report.checks.tables.error && (
                       <Alert className="bg-red-900/20 border-red-800 text-red-300">
                         <AlertCircle className="h-4 w-4" />
-                        <AlertDescription>{report.checks.tables.error}</AlertDescription>
-                      </Alert>
-                    )}
-
-                    {report.checks.tables.missing && report.checks.tables.missing.length > 0 && (
-                      <Alert className="bg-yellow-900/20 border-yellow-800 text-yellow-300">
-                        <AlertCircle className="h-4 w-4" />
                         <AlertDescription>
-                          Missing tables: {report.checks.tables.missing.join(", ")}
+                          {report.checks.tables.error}
                         </AlertDescription>
                       </Alert>
                     )}
 
+                    {report.checks.tables.missing &&
+                      report.checks.tables.missing.length > 0 && (
+                        <Alert className="bg-yellow-900/20 border-yellow-800 text-yellow-300">
+                          <AlertCircle className="h-4 w-4" />
+                          <AlertDescription>
+                            Missing tables:{" "}
+                            {report.checks.tables.missing.join(", ")}
+                          </AlertDescription>
+                        </Alert>
+                      )}
+
                     <div className="grid grid-cols-2 gap-3">
                       {expectedTables.map((table) => {
                         const exists =
-                          report.checks.tables.tables?.includes(table.name) || false;
+                          report.checks.tables.tables?.includes(table.name) ||
+                          false;
                         return (
                           <div
                             key={table.name}
@@ -282,10 +304,14 @@ export default function SchemaVerification() {
                                 <AlertCircle className="w-4 h-4 text-red-500 mt-1 flex-shrink-0" />
                               )}
                               <div>
-                                <p className={`font-semibold ${exists ? "text-green-300" : "text-red-300"}`}>
+                                <p
+                                  className={`font-semibold ${exists ? "text-green-300" : "text-red-300"}`}
+                                >
                                   {table.name}
                                 </p>
-                                <p className="text-xs text-slate-400">{table.description}</p>
+                                <p className="text-xs text-slate-400">
+                                  {table.description}
+                                </p>
                               </div>
                             </div>
                           </div>
@@ -302,7 +328,8 @@ export default function SchemaVerification() {
                   <CardHeader>
                     <CardTitle className="text-white flex items-center gap-2">
                       <Code className="w-5 h-5" />
-                      Database Functions ({report.checks.functions.totalFunctions || 0}/
+                      Database Functions (
+                      {report.checks.functions.totalFunctions || 0}/
                       {report.checks.functions.expectedFunctions || 12})
                     </CardTitle>
                   </CardHeader>
@@ -310,29 +337,38 @@ export default function SchemaVerification() {
                     {report.checks.functions.error && (
                       <Alert className="bg-red-900/20 border-red-800 text-red-300">
                         <AlertCircle className="h-4 w-4" />
-                        <AlertDescription>{report.checks.functions.error}</AlertDescription>
+                        <AlertDescription>
+                          {report.checks.functions.error}
+                        </AlertDescription>
                       </Alert>
                     )}
 
                     {report.checks.functions.message && (
                       <Alert className="bg-blue-900/20 border-blue-800 text-blue-300">
                         <AlertCircle className="h-4 w-4" />
-                        <AlertDescription>{report.checks.functions.message}</AlertDescription>
-                      </Alert>
-                    )}
-
-                    {report.checks.functions.missing && report.checks.functions.missing.length > 0 && (
-                      <Alert className="bg-yellow-900/20 border-yellow-800 text-yellow-300">
-                        <AlertCircle className="h-4 w-4" />
                         <AlertDescription>
-                          Missing functions: {report.checks.functions.missing.join(", ")}
+                          {report.checks.functions.message}
                         </AlertDescription>
                       </Alert>
                     )}
 
+                    {report.checks.functions.missing &&
+                      report.checks.functions.missing.length > 0 && (
+                        <Alert className="bg-yellow-900/20 border-yellow-800 text-yellow-300">
+                          <AlertCircle className="h-4 w-4" />
+                          <AlertDescription>
+                            Missing functions:{" "}
+                            {report.checks.functions.missing.join(", ")}
+                          </AlertDescription>
+                        </Alert>
+                      )}
+
                     <div className="grid grid-cols-2 gap-3">
                       {expectedFunctions.map((func) => {
-                        const exists = report.checks.functions.functions?.includes(func.name);
+                        const exists =
+                          report.checks.functions.functions?.includes(
+                            func.name,
+                          );
                         return (
                           <div
                             key={func.name}
@@ -349,10 +385,14 @@ export default function SchemaVerification() {
                                 <AlertCircle className="w-4 h-4 text-red-500 mt-1 flex-shrink-0" />
                               )}
                               <div>
-                                <p className={`font-semibold ${exists ? "text-green-300" : "text-red-300"}`}>
+                                <p
+                                  className={`font-semibold ${exists ? "text-green-300" : "text-red-300"}`}
+                                >
                                   {func.name}
                                 </p>
-                                <p className="text-xs text-slate-400">{func.description}</p>
+                                <p className="text-xs text-slate-400">
+                                  {func.description}
+                                </p>
                               </div>
                             </div>
                           </div>
@@ -369,14 +409,17 @@ export default function SchemaVerification() {
                   <CardHeader>
                     <CardTitle className="text-white flex items-center gap-2">
                       <Package className="w-5 h-5" />
-                      Seed Data ({report.checks.seedData.recordCount || 0} records)
+                      Seed Data ({report.checks.seedData.recordCount || 0}{" "}
+                      records)
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     {report.checks.seedData.error && (
                       <Alert className="bg-red-900/20 border-red-800 text-red-300">
                         <AlertCircle className="h-4 w-4" />
-                        <AlertDescription>{report.checks.seedData.error}</AlertDescription>
+                        <AlertDescription>
+                          {report.checks.seedData.error}
+                        </AlertDescription>
                       </Alert>
                     )}
 
@@ -384,48 +427,71 @@ export default function SchemaVerification() {
                       <Alert className="bg-yellow-900/20 border-yellow-800 text-yellow-300">
                         <AlertCircle className="h-4 w-4" />
                         <AlertDescription>
-                          No seed data found. Run the supplementary SQL to populate price history.
+                          No seed data found. Run the supplementary SQL to
+                          populate price history.
                         </AlertDescription>
                       </Alert>
                     )}
 
-                    {report.checks.seedData.symbols && report.checks.seedData.symbols.length > 0 && (
-                      <div>
-                        <h4 className="text-white font-semibold mb-3">Symbols in Database</h4>
-                        <div className="flex flex-wrap gap-2">
-                          {report.checks.seedData.symbols.map((symbol: string) => (
-                            <span
-                              key={symbol}
-                              className="px-3 py-1 rounded bg-blue-900/30 border border-blue-800 text-blue-300 text-sm"
-                            >
-                              {symbol}
-                            </span>
-                          ))}
+                    {report.checks.seedData.symbols &&
+                      report.checks.seedData.symbols.length > 0 && (
+                        <div>
+                          <h4 className="text-white font-semibold mb-3">
+                            Symbols in Database
+                          </h4>
+                          <div className="flex flex-wrap gap-2">
+                            {report.checks.seedData.symbols.map(
+                              (symbol: string) => (
+                                <span
+                                  key={symbol}
+                                  className="px-3 py-1 rounded bg-blue-900/30 border border-blue-800 text-blue-300 text-sm"
+                                >
+                                  {symbol}
+                                </span>
+                              ),
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
 
                     {report.checks.seedData.sampleRecords &&
                       report.checks.seedData.sampleRecords.length > 0 && (
                         <div>
-                          <h4 className="text-white font-semibold mb-3">Sample Records</h4>
+                          <h4 className="text-white font-semibold mb-3">
+                            Sample Records
+                          </h4>
                           <div className="space-y-2 max-h-64 overflow-y-auto">
-                            {report.checks.seedData.sampleRecords.map((record: any, idx: number) => (
-                              <div key={idx} className="p-3 bg-slate-700/30 rounded text-sm">
-                                <p className="text-slate-300">
-                                  <span className="font-semibold">{record.symbol}</span>
-                                  {" - "}${record.price_usd?.toFixed(2)} (
-                                  <span className={record.price_change_24h >= 0 ? "text-green-400" : "text-red-400"}>
-                                    {record.price_change_24h >= 0 ? "+" : ""}
-                                    {record.price_change_24h?.toFixed(2)}%
-                                  </span>
-                                  )
-                                </p>
-                                <p className="text-slate-500 text-xs mt-1">
-                                  {new Date(record.timestamp).toLocaleString()}
-                                </p>
-                              </div>
-                            ))}
+                            {report.checks.seedData.sampleRecords.map(
+                              (record: any, idx: number) => (
+                                <div
+                                  key={idx}
+                                  className="p-3 bg-slate-700/30 rounded text-sm"
+                                >
+                                  <p className="text-slate-300">
+                                    <span className="font-semibold">
+                                      {record.symbol}
+                                    </span>
+                                    {" - "}${record.price_usd?.toFixed(2)} (
+                                    <span
+                                      className={
+                                        record.price_change_24h >= 0
+                                          ? "text-green-400"
+                                          : "text-red-400"
+                                      }
+                                    >
+                                      {record.price_change_24h >= 0 ? "+" : ""}
+                                      {record.price_change_24h?.toFixed(2)}%
+                                    </span>
+                                    )
+                                  </p>
+                                  <p className="text-slate-500 text-xs mt-1">
+                                    {new Date(
+                                      record.timestamp,
+                                    ).toLocaleString()}
+                                  </p>
+                                </div>
+                              ),
+                            )}
                           </div>
                         </div>
                       )}
@@ -446,22 +512,27 @@ export default function SchemaVerification() {
                     {report.checks.extensions.error && (
                       <Alert className="bg-red-900/20 border-red-800 text-red-300">
                         <AlertCircle className="h-4 w-4" />
-                        <AlertDescription>{report.checks.extensions.error}</AlertDescription>
-                      </Alert>
-                    )}
-
-                    {report.checks.extensions.missing && report.checks.extensions.missing.length > 0 && (
-                      <Alert className="bg-yellow-900/20 border-yellow-800 text-yellow-300">
-                        <AlertCircle className="h-4 w-4" />
                         <AlertDescription>
-                          Missing extensions: {report.checks.extensions.missing.join(", ")}
+                          {report.checks.extensions.error}
                         </AlertDescription>
                       </Alert>
                     )}
 
+                    {report.checks.extensions.missing &&
+                      report.checks.extensions.missing.length > 0 && (
+                        <Alert className="bg-yellow-900/20 border-yellow-800 text-yellow-300">
+                          <AlertCircle className="h-4 w-4" />
+                          <AlertDescription>
+                            Missing extensions:{" "}
+                            {report.checks.extensions.missing.join(", ")}
+                          </AlertDescription>
+                        </Alert>
+                      )}
+
                     <div className="grid grid-cols-2 gap-3">
                       {report.checks.extensions.required?.map((ext: string) => {
-                        const found = report.checks.extensions.found?.includes(ext);
+                        const found =
+                          report.checks.extensions.found?.includes(ext);
                         return (
                           <div
                             key={ext}
@@ -476,7 +547,11 @@ export default function SchemaVerification() {
                             ) : (
                               <AlertCircle className="w-4 h-4 text-red-500" />
                             )}
-                            <span className={found ? "text-green-300" : "text-red-300"}>
+                            <span
+                              className={
+                                found ? "text-green-300" : "text-red-300"
+                              }
+                            >
                               {ext}
                             </span>
                           </div>

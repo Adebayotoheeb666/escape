@@ -140,8 +140,11 @@ export const handleSchemaVerification: RequestHandler = async (_req, res) => {
     };
 
     // 4. Check seed data in price_history
-    const { data: priceData, error: priceError, count: priceCount } =
-      await supabase.from("price_history").select("*", { count: "exact" });
+    const {
+      data: priceData,
+      error: priceError,
+      count: priceCount,
+    } = await supabase.from("price_history").select("*", { count: "exact" });
 
     if (priceError) {
       report.checks.seedData = {
@@ -159,12 +162,7 @@ export const handleSchemaVerification: RequestHandler = async (_req, res) => {
     }
 
     // 5. Check for required extensions (assume they exist if schema deployment succeeded)
-    const requiredExtensions = [
-      "uuid-ossp",
-      "pgcrypto",
-      "citext",
-      "pg_cron",
-    ];
+    const requiredExtensions = ["uuid-ossp", "pgcrypto", "citext", "pg_cron"];
 
     // If tables were created successfully, extensions were likely installed
     const allTablesExist = missingTables.length === 0;

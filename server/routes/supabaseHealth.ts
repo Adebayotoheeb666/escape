@@ -55,18 +55,15 @@ export const handleSupabaseHealth: RequestHandler = async (_req, res) => {
 
     // Test 2: Test RPC function as a lightweight connection check
     try {
-      const { data, error: rpcError } = await Promise.race([
+      const { data, error: rpcError } = (await Promise.race([
         supabase.rpc("ping", {}).then((result) => ({
           ...result,
           type: "rpc",
         })),
         new Promise((_, reject) =>
-          setTimeout(
-            () => reject(new Error("Request timeout (5s)")),
-            5000,
-          ),
+          setTimeout(() => reject(new Error("Request timeout (5s)")), 5000),
         ),
-      ]) as any;
+      ])) as any;
 
       if (rpcError && rpcError.code !== "42883") {
         // 42883 = function does not exist
@@ -93,15 +90,12 @@ export const handleSupabaseHealth: RequestHandler = async (_req, res) => {
 
     // Test 3: Try selecting from users table
     try {
-      const { data, error: tableError } = await Promise.race([
+      const { data, error: tableError } = (await Promise.race([
         supabase.from("users").select("id").limit(1),
         new Promise((_, reject) =>
-          setTimeout(
-            () => reject(new Error("Request timeout (5s)")),
-            5000,
-          ),
+          setTimeout(() => reject(new Error("Request timeout (5s)")), 5000),
         ),
-      ]) as any;
+      ])) as any;
 
       if (tableError) {
         diagnostics.tableTest = {

@@ -13,9 +13,7 @@ export const handleSignUp: RequestHandler = async (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
-    return res
-      .status(400)
-      .json({ error: "Email and password are required" });
+    return res.status(400).json({ error: "Email and password are required" });
   }
 
   try {
@@ -64,9 +62,7 @@ export const handleSignIn: RequestHandler = async (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
-    return res
-      .status(400)
-      .json({ error: "Email and password are required" });
+    return res.status(400).json({ error: "Email and password are required" });
   }
 
   try {
@@ -258,7 +254,8 @@ export const handleGetSession: RequestHandler = async (req, res) => {
 
     return res.status(401).json({ error: "No user found" });
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Failed to get session";
+    const message =
+      err instanceof Error ? err.message : "Failed to get session";
     return res.status(500).json({ error: message });
   }
 };
