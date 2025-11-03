@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import type { User as DBUser } from "@shared/types/database";
+import { toast } from "@/hooks/use-toast";
 
 interface AuthUser {
   id: string;
