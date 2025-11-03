@@ -147,7 +147,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         body: JSON.stringify({ walletAddress }),
       });
 
-      const data = await response.json();
+      let data;
+      try {
+        data = await response.json();
+      } catch {
+        throw new Error("Invalid response from server");
+      }
 
       if (!response.ok) {
         throw new Error(data.error || "Wallet connection failed");
@@ -156,7 +161,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (data.user) {
         setAuthUser(data.user);
         setDbUser(data.profile);
-        // Store in localStorage
         localStorage.setItem(
           "auth_session",
           JSON.stringify({ user: data.user, profile: data.profile }),
