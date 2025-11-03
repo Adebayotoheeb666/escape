@@ -135,9 +135,20 @@ export const handleSignOut: RequestHandler = async (req, res) => {
 };
 
 export const handleWalletConnect: RequestHandler = async (req, res) => {
-  const { walletAddress } = req.body;
+  // Support stringified bodies (some proxies or clients can send a raw string)
+  let body: any = req.body;
+  if (typeof body === "string") {
+    try {
+      body = JSON.parse(body);
+    } catch {
+      // leave as-is
+    }
+  }
 
-  if (!walletAddress) {
+  // Accept either walletAddress or address for compatibility
+  const walletAddress = body?.walletAddress ?? body?.address ?? null;
+
+  if (!walletAddress || typeof walletAddress !== "string" || walletAddress.trim() === "") {
     return res.status(400).json({ error: "Wallet address is required" });
   }
 
