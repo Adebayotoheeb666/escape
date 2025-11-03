@@ -1,4 +1,3 @@
-import fetch from 'node-fetch';
 import { ethers } from 'ethers';
 
 (async function(){
