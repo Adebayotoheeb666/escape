@@ -132,18 +132,7 @@ export function createServer() {
   app.get("/api/auth/session", authRateLimiter, handleGetSession);
 
   // GET /api/auth/nonce - Get a nonce for signing (query: address=0x...)
-  app.get("/api/auth/nonce", authRateLimiter, (req, res) => {
-    // delegated to handle in auth.ts if needed
-    // fallback here: simple implementation
-    const address = String(req.query.address || "");
-    if (!/^0x[a-fA-F0-9]{40}$/.test(address)) {
-      return res.status(400).json({ error: "Valid wallet address is required" });
-    }
-    // lazy import to avoid circular
-    const { createNonceForAddress } = require("./routes/auth");
-    const nonce = createNonceForAddress(address);
-    return res.status(200).json({ nonce });
-  });
+  app.get("/api/auth/nonce", authRateLimiter, handleGetNonce);
 
   return app;
 }
