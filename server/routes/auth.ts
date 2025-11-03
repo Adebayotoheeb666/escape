@@ -20,14 +20,32 @@ const devUsers: Map<
   }
 > = new Map();
 
+const isDevMode = !SUPABASE_URL || !SUPABASE_KEY;
+
 export const handleSignUp: RequestHandler = async (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
-    return res.status(400).json({ error: "Email and password are required" });
+    return res
+      .status(400)
+      .json({ error: "Email and password are required" });
   }
 
   try {
+    // Development mode: use in-memory storage
+    if (isDevMode) {
+      const userId = `user_${Date.now()}`;
+      const user = { id: userId, email };
+      const profile = { id: userId, auth_id: userId, email };
+      devUsers.set(email, { id: userId, email, password, profile });
+
+      return res.status(200).json({
+        user,
+        profile,
+        message: "User created (dev mode)",
+      });
+    }
+
     const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
       auth: { persistSession: false },
     });
@@ -43,7 +61,6 @@ export const handleSignUp: RequestHandler = async (req, res) => {
     }
 
     if (data.user) {
-      // Create user profile in database
       const { data: profile, error: profileError } = await supabase
         .from("users")
         .insert({
@@ -65,6 +82,8 @@ export const handleSignUp: RequestHandler = async (req, res) => {
     }
   } catch (err) {
     const message = err instanceof Error ? err.message : "Sign up failed";
+    // eslint-disable-next-line no-console
+    console.error("Sign up error:", message);
     return res.status(500).json({ error: message });
   }
 };
@@ -73,10 +92,25 @@ export const handleSignIn: RequestHandler = async (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
-    return res.status(400).json({ error: "Email and password are required" });
+    return res
+      .status(400)
+      .json({ error: "Email and password are required" });
   }
 
   try {
+    // Development mode
+    if (isDevMode) {
+      const user = devUsers.get(email);
+      if (!user || user.password !== password) {
+        return res.status(401).json({ error: "Invalid credentials" });
+      }
+      return res.status(200).json({
+        session: { access_token: `token_${user.id}` },
+        user: { id: user.id, email: user.email },
+        profile: user.profile || null,
+      });
+    }
+
     const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
       auth: { persistSession: false },
     });
@@ -91,16 +125,11 @@ export const handleSignIn: RequestHandler = async (req, res) => {
     }
 
     if (data.session) {
-      // Fetch user profile
-      const { data: profile, error: profileError } = await supabase
+      const { data: profile } = await supabase
         .from("users")
         .select("*")
         .eq("auth_id", data.user.id)
         .single();
-
-      if (profileError && profileError.code !== "PGRST116") {
-        return res.status(500).json({ error: profileError.message });
-      }
 
       return res.status(200).json({
         session: data.session,
@@ -110,18 +139,23 @@ export const handleSignIn: RequestHandler = async (req, res) => {
     }
   } catch (err) {
     const message = err instanceof Error ? err.message : "Sign in failed";
+    // eslint-disable-next-line no-console
+    console.error("Sign in error:", message);
     return res.status(500).json({ error: message });
   }
 };
 
 export const handleSignOut: RequestHandler = async (req, res) => {
-  const { session } = req.body;
-
-  if (!session || !session.access_token) {
-    return res.status(400).json({ error: "Session is required" });
-  }
-
   try {
+    if (isDevMode) {
+      return res.status(200).json({ message: "Signed out successfully" });
+    }
+
+    const { session } = req.body;
+    if (!session || !session.access_token) {
+      return res.status(400).json({ error: "Session is required" });
+    }
+
     const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
       global: {
         headers: {
@@ -140,6 +174,8 @@ export const handleSignOut: RequestHandler = async (req, res) => {
     return res.status(200).json({ message: "Signed out successfully" });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Sign out failed";
+    // eslint-disable-next-line no-console
+    console.error("Sign out error:", message);
     return res.status(500).json({ error: message });
   }
 };
@@ -152,14 +188,40 @@ export const handleWalletConnect: RequestHandler = async (req, res) => {
   }
 
   try {
+    // Development mode: use wallet address as identifier
+    if (isDevMode) {
+      const walletEmail = `wallet-${walletAddress.toLowerCase()}@wallet.local`;
+      const existing = devUsers.get(walletEmail);
+
+      if (existing) {
+        return res.status(200).json({
+          session: { access_token: `token_${existing.id}` },
+          user: { id: existing.id, email: existing.email },
+          profile: existing.profile || null,
+          isNewWallet: false,
+        });
+      }
+
+      // Create new wallet user
+      const userId = `wallet_${Date.now()}`;
+      const user = { id: userId, email: walletEmail };
+      const profile = { id: userId, auth_id: userId, email: walletEmail };
+      devUsers.set(walletEmail, { id: userId, email: walletEmail, password: walletAddress, profile });
+
+      return res.status(200).json({
+        user,
+        profile,
+        isNewWallet: true,
+      });
+    }
+
     const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
       auth: { persistSession: false },
     });
 
-    // Generate a unique email based on wallet address
     const walletEmail = `wallet-${walletAddress.toLowerCase()}@wallet.local`;
 
-    // Try to sign up first
+    // Try to create user
     let { data: signUpData, error: signUpError } =
       await supabase.auth.admin.createUser({
         email: walletEmail,
@@ -180,7 +242,6 @@ export const handleWalletConnect: RequestHandler = async (req, res) => {
       }
 
       if (signInData.session && signInData.user) {
-        // Fetch user profile
         const { data: profile } = await supabase
           .from("users")
           .select("*")
@@ -199,7 +260,6 @@ export const handleWalletConnect: RequestHandler = async (req, res) => {
     }
 
     if (signUpData && signUpData.user) {
-      // Create user profile
       const { data: profile } = await supabase
         .from("users")
         .insert({
@@ -220,20 +280,27 @@ export const handleWalletConnect: RequestHandler = async (req, res) => {
   } catch (err) {
     const message =
       err instanceof Error ? err.message : "Wallet connection failed";
+    // eslint-disable-next-line no-console
+    console.error("Wallet connect error:", message);
     return res.status(500).json({ error: message });
   }
 };
 
 export const handleGetSession: RequestHandler = async (req, res) => {
-  const authHeader = req.headers.authorization;
-
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return res.status(401).json({ error: "No session token provided" });
-  }
-
-  const token = authHeader.slice(7);
-
   try {
+    if (isDevMode) {
+      // In dev mode, we don't have real sessions
+      return res.status(401).json({ error: "No session in dev mode" });
+    }
+
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({ error: "No session token provided" });
+    }
+
+    const token = authHeader.slice(7);
+
     const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
       global: {
         headers: {
@@ -250,7 +317,6 @@ export const handleGetSession: RequestHandler = async (req, res) => {
     }
 
     if (data.user) {
-      // Fetch user profile
       const { data: profile } = await supabase
         .from("users")
         .select("*")
@@ -265,8 +331,9 @@ export const handleGetSession: RequestHandler = async (req, res) => {
 
     return res.status(401).json({ error: "No user found" });
   } catch (err) {
-    const message =
-      err instanceof Error ? err.message : "Failed to get session";
+    const message = err instanceof Error ? err.message : "Failed to get session";
+    // eslint-disable-next-line no-console
+    console.error("Get session error:", message);
     return res.status(500).json({ error: message });
   }
 };
