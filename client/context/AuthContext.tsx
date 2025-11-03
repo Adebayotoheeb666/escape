@@ -133,10 +133,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setError(null);
     setLoading(true);
     try {
+      if (!walletAddress) {
+        setError("Wallet address is required");
+        throw new Error("Wallet address is required");
+      }
+
+      // Normalize wallet address: extract a 0x + 40 hex char substring
+      const match = String(walletAddress).match(/0x[a-fA-F0-9]{40}/i);
+      if (!match) {
+        setError("Invalid wallet address");
+        throw new Error("Invalid wallet address");
+      }
+
+      const normalized = match[0].toLowerCase();
+
       const response = await fetch("/api/auth/wallet-connect", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ walletAddress }),
+        body: JSON.stringify({ walletAddress: normalized }),
       });
 
       const data = await response.json();

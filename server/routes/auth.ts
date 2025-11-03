@@ -135,10 +135,22 @@ export const handleSignOut: RequestHandler = async (req, res) => {
 };
 
 export const handleWalletConnect: RequestHandler = async (req, res) => {
-  const { walletAddress } = req.body;
+  const walletAddressRaw = req.body?.walletAddress || req.body?.wallet_address || "";
 
-  if (!walletAddress) {
+  // Basic logging for debugging (avoid logging full PII in production)
+  const remoteIp = (req.headers["x-forwarded-for"] || req.socket.remoteAddress || "unknown").toString();
+  console.info(`[wallet-connect] request from ${remoteIp}, payload: ${String(walletAddressRaw).slice(0,64)}`);
+
+  if (!walletAddressRaw) {
     return res.status(400).json({ error: "Wallet address is required" });
+  }
+
+  const walletAddress = String(walletAddressRaw).trim();
+
+  // Validate Ethereum address format (strict)
+  if (!/^0x[a-fA-F0-9]{40}$/.test(walletAddress)) {
+    console.warn(`[wallet-connect] invalid address format: ${walletAddress}`);
+    return res.status(400).json({ error: "Valid wallet address is required" });
   }
 
   try {
@@ -210,6 +222,7 @@ export const handleWalletConnect: RequestHandler = async (req, res) => {
   } catch (err) {
     const message =
       err instanceof Error ? err.message : "Wallet connection failed";
+    console.error(`[wallet-connect] error: ${message}`);
     return res.status(500).json({ error: message });
   }
 };
