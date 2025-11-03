@@ -9,6 +9,17 @@ const SUPABASE_KEY =
   process.env.VITE_SUPABASE_ANON_KEY ||
   "";
 
+// In-memory store for development (not for production)
+const devUsers: Map<
+  string,
+  {
+    id: string;
+    email: string;
+    password: string;
+    profile?: Record<string, any>;
+  }
+> = new Map();
+
 export const handleSignUp: RequestHandler = async (req, res) => {
   const { email, password } = req.body;
 
