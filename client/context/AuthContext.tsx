@@ -27,95 +27,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Check if user is logged in on mount
+  // Load auth from localStorage on mount
   useEffect(() => {
-    let isMounted = true;
-
-    async function checkAuth() {
+    const stored = localStorage.getItem("auth_session");
+    if (stored) {
       try {
-        // Get current session
-        const {
-          data: { session },
-          error: sessionError,
-        } = await supabase.auth.getSession();
-
-        if (sessionError) throw sessionError;
-
-        if (session?.user && isMounted) {
-          setAuthUser(session.user);
-
-          // Fetch user profile from database
-          const { data: profile, error: profileError } = await supabase
-            .from("users")
-            .select("*")
-            .eq("auth_id", session.user.id)
-            .single();
-
-          if (profileError && profileError.code !== "PGRST116") {
-            throw profileError;
-          }
-
-          if (profile) {
-            setDbUser(profile);
-          }
-        }
-      } catch (err) {
-        if (isMounted) {
-          setError(err instanceof Error ? err.message : "Auth check failed");
-        }
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
+        const { user, profile } = JSON.parse(stored);
+        setAuthUser(user);
+        setDbUser(profile);
+      } catch {
+        localStorage.removeItem("auth_session");
       }
     }
-
-    checkAuth();
-
-    // Listen for auth changes
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (isMounted) {
-          if (session?.user) {
-            setAuthUser(session.user);
-
-            // Fetch or create user profile
-            const { data: profile } = await supabase
-              .from("users")
-              .select("*")
-              .eq("auth_id", session.user.id)
-              .single();
-
-            if (profile) {
-              setDbUser(profile);
-            } else {
-              // Create profile if doesn't exist
-              const { data: newProfile } = await supabase
-                .from("users")
-                .insert({
-                  auth_id: session.user.id,
-                  email: session.user.email || "",
-                })
-                .select()
-                .single();
-
-              if (newProfile) {
-                setDbUser(newProfile);
-              }
-            }
-          } else {
-            setAuthUser(null);
-            setDbUser(null);
-          }
-          setLoading(false);
-        }
-      },
-    );
-
-    return () => {
-      isMounted = false;
-      authListener?.subscription.unsubscribe();
-    };
+    setLoading(false);
   }, []);
 
   async function signUp(email: string, password: string) {
