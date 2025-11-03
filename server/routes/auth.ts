@@ -26,9 +26,7 @@ export const handleSignUp: RequestHandler = async (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
-    return res
-      .status(400)
-      .json({ error: "Email and password are required" });
+    return res.status(400).json({ error: "Email and password are required" });
   }
 
   try {
@@ -92,9 +90,7 @@ export const handleSignIn: RequestHandler = async (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
-    return res
-      .status(400)
-      .json({ error: "Email and password are required" });
+    return res.status(400).json({ error: "Email and password are required" });
   }
 
   try {
@@ -206,7 +202,12 @@ export const handleWalletConnect: RequestHandler = async (req, res) => {
       const userId = `wallet_${Date.now()}`;
       const user = { id: userId, email: walletEmail };
       const profile = { id: userId, auth_id: userId, email: walletEmail };
-      devUsers.set(walletEmail, { id: userId, email: walletEmail, password: walletAddress, profile });
+      devUsers.set(walletEmail, {
+        id: userId,
+        email: walletEmail,
+        password: walletAddress,
+        profile,
+      });
 
       return res.status(200).json({
         user,
@@ -331,7 +332,8 @@ export const handleGetSession: RequestHandler = async (req, res) => {
 
     return res.status(401).json({ error: "No user found" });
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Failed to get session";
+    const message =
+      err instanceof Error ? err.message : "Failed to get session";
     // eslint-disable-next-line no-console
     console.error("Get session error:", message);
     return res.status(500).json({ error: message });
