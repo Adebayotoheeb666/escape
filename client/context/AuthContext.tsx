@@ -29,19 +29,54 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Load auth from localStorage on mount
+  // On mount, try to restore session from server cookie; fallback to localStorage
   useEffect(() => {
-    const stored = localStorage.getItem("auth_session");
-    if (stored) {
+    let mounted = true;
+
+    async function restore() {
+      setLoading(true);
       try {
-        const { user, profile } = JSON.parse(stored);
-        setAuthUser(user);
-        setDbUser(profile);
+        // Try server session (cookie-based). Include credentials to ensure cookies are sent.
+        const resp = await fetch("/api/auth/session", { credentials: "include" });
+        if (resp.ok) {
+          const data = await resp.json();
+          if (mounted && data.user) {
+            setAuthUser(data.user);
+            setDbUser(data.profile || null);
+            try {
+              localStorage.setItem("auth_session", JSON.stringify({ user: data.user, profile: data.profile }));
+            } catch {}
+            setLoading(false);
+            return;
+          }
+        }
+      } catch (e) {
+        // ignore network errors and fallback to local storage
+        console.debug("Session restore failed:", e);
+      }
+
+      // Fallback: localStorage
+      try {
+        const stored = localStorage.getItem("auth_session");
+        if (stored) {
+          const { user, profile } = JSON.parse(stored);
+          if (mounted) {
+            setAuthUser(user);
+            setDbUser(profile);
+          }
+        }
       } catch {
         localStorage.removeItem("auth_session");
       }
+
+      if (mounted) setLoading(false);
     }
-    setLoading(false);
+
+    restore();
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   async function signUp(email: string, password: string) {
