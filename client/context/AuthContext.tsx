@@ -11,6 +11,7 @@ interface AuthContextType {
   signUp: (email: string, password: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
+  connectWallet: (walletAddress: string) => Promise<void>;
   isAuthenticated: boolean;
 }
 
@@ -199,6 +200,76 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  async function connectWallet(walletAddress: string) {
+    setError(null);
+    setLoading(true);
+    try {
+      // Generate a unique email based on wallet address
+      const walletEmail = `wallet-${walletAddress.toLowerCase()}@wallet.local`;
+
+      // Try to sign in with the wallet
+      const { data: existingSession } = await supabase.auth.getSession();
+      if (existingSession?.session?.user) {
+        setAuthUser(existingSession.session.user);
+        return;
+      }
+
+      // Create or sign in to wallet-based account
+      const { data: signUpData, error: signUpError } =
+        await supabase.auth.signUp({
+          email: walletEmail,
+          password: walletAddress,
+        });
+
+      if (signUpError && signUpError.message.includes("already registered")) {
+        // User already exists, sign in
+        const { data: signInData, error: signInError } =
+          await supabase.auth.signInWithPassword({
+            email: walletEmail,
+            password: walletAddress,
+          });
+
+        if (signInError) throw signInError;
+
+        if (signInData.user) {
+          setAuthUser(signInData.user);
+
+          // Fetch user profile
+          const { data: profile } = await supabase
+            .from("users")
+            .select("*")
+            .eq("auth_id", signInData.user.id)
+            .single();
+
+          if (profile) setDbUser(profile);
+        }
+      } else if (signUpError) {
+        throw signUpError;
+      } else if (signUpData.user) {
+        setAuthUser(signUpData.user);
+
+        // Create user profile
+        const { data: profile } = await supabase
+          .from("users")
+          .insert({
+            auth_id: signUpData.user.id,
+            email: walletEmail,
+          })
+          .select()
+          .single();
+
+        if (profile) setDbUser(profile);
+      }
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Wallet connection failed";
+      setError(message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }
+
   const value: AuthContextType = {
     authUser,
     dbUser,
@@ -207,6 +278,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signUp,
     signIn,
     signOut,
+    connectWallet,
     isAuthenticated: !!authUser,
   };
 

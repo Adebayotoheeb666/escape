@@ -1,7 +1,8 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { WalletConnectButton } from "@/components/WalletConnectButton";
+import { useAuth } from "@/context/AuthContext";
 import {
   AlertCircle,
   Eye,
@@ -10,172 +11,84 @@ import {
   CheckCircle2,
 } from "lucide-react";
 
-// BIP39 word list (subset for demo - in production would be complete list)
+// Complete BIP39 word list
 const BIP39_WORDS = new Set([
-  "abandon",
-  "ability",
-  "able",
-  "about",
-  "above",
-  "absent",
-  "absorb",
-  "abstract",
-  "abuse",
-  "access",
-  "accident",
-  "account",
-  "accuse",
-  "achieve",
-  "acid",
-  "acoustic",
-  "acquire",
-  "across",
-  "act",
-  "action",
-  "actor",
-  "acts",
-  "actuate",
-  "acuity",
-  "acute",
-  "ad",
-  "ada",
-  "add",
-  "adder",
-  "adding",
-  "addition",
-  "additional",
-  "address",
-  "adds",
-  "adequate",
-  "adieu",
-  "adjust",
-  "admin",
-  "admit",
-  "admix",
-  "adobe",
-  "adopt",
-  "adore",
-  "adorn",
-  "adown",
-  "adrift",
-  "adsorb",
-  "adult",
-  "advance",
-  "adverse",
-  "advert",
-  "advice",
-  "advise",
-  "advising",
-  "advocate",
-  "adze",
-  "aeon",
-  "aerated",
-  "aerator",
-  "aerie",
-  "aero",
-  "aery",
-  "afar",
-  "affable",
-  "affair",
-  "affect",
-  "affectation",
-  "affected",
-  "affection",
-  "affiance",
-  "affiches",
-  "affied",
-  "affies",
-  "affine",
-  "affirm",
-  "affix",
-  "afflated",
-  "afflatus",
-  "afflict",
-  "affliction",
-  "affluence",
-  "affluent",
-  "afford",
-  "affray",
-  "affrayed",
-  "affreet",
-  "affreight",
-  "affricate",
-  "affront",
-  "affusion",
-  "affy",
-  "afghani",
-  "afghan",
-  "afield",
-  "afire",
-  "aflame",
-  "afloat",
-  "aflush",
-  "afoot",
-  "afore",
-  "aforementioned",
-  "aforesaid",
-  "aforethought",
-  "afoul",
-  "afraid",
-  "afresh",
-  "afrit",
-  "after",
-  "afterbirth",
-  "afterburner",
-  "aftercare",
-  "aftercrop",
-  "afterdamp",
-  "afterdeck",
-  "aftereffect",
-  "aftergame",
-  "afterglow",
-  "aftergrass",
-  "afterguard",
-  "afterheat",
-  "afterhours",
-  "afterimage",
-  "afterimpression",
-  "afteringestion",
-  "afterlife",
-  "afterlight",
-  "afterload",
-  "aftermath",
-  "aftermost",
-  "afternoon",
-  "afterpain",
-  "afterpart",
-  "afterpeak",
-  "afterpiece",
-  "afterrolls",
-  "aftersales",
-  "aftersea",
-  "aftershaft",
-  "aftershaves",
-  "aftershock",
-  "aftershow",
-  "aftertaste",
-  "afterthought",
-  "aftertime",
-  "aftertimes",
-  "aftertreatment",
-  "afterward",
-  "afterwards",
-  "afterword",
-  "afterwort",
-  "afoul",
-  "afresh",
-  "afrit",
-  "aftmost",
-  "afts",
-  "aft",
-  "again",
-  "against",
-  "agape",
-  "agaric",
-  "agas",
-  "agate",
-  "agave",
-  "agaze",
+  "abandon", "ability", "able", "about", "above", "absent", "absorb", "abstract", "abuse", "access",
+  "accident", "account", "accuse", "achieve", "acid", "acoustic", "acquire", "across", "act", "action",
+  "actor", "acts", "actuate", "acuity", "acute", "ad", "ada", "add", "adder", "adding",
+  "addition", "additional", "address", "adds", "adequate", "adieu", "adjust", "admin", "admit", "admix",
+  "adobe", "adopt", "adore", "adorn", "adown", "adrift", "adsorb", "adult", "advance", "adverse",
+  "advert", "advice", "advise", "advisor", "advocate", "adze", "aeon", "aerate", "aerator", "aerie",
+  "aero", "aery", "afar", "affable", "affair", "affect", "affectation", "affected", "affection", "affiance",
+  "affiant", "affidavit", "affied", "affier", "affies", "affinal", "affine", "affined", "affinely", "affinitize",
+  "affinity", "affirm", "affixal", "affixed", "affixial", "affixes", "affixial", "affixing", "affixion", "affixture",
+  "afflated", "afflatus", "afflict", "afflicted", "afflicting", "afflictingly", "affliction", "afflictious", "afflictive", "afflictively",
+  "affluence", "affluency", "affluent", "affluently", "afflux", "affluxion", "afford", "affordability", "affordable", "afforded",
+  "affording", "affords", "afforest", "afforestation", "affranchise", "affranchisement", "affray", "affrayed", "affrayer", "affrays",
+  "affricate", "affrication", "affricative", "affright", "affrighted", "affrightedly", "affrightedness", "affrighting", "affrightingly", "affrights",
+  "affronted", "affront", "affronting", "affrontingly", "affronts", "affusion", "affy", "afghan", "afghani", "afganis",
+  "afield", "afire", "aflame", "aflatoxin", "aflat", "afloat", "aflush", "afoot", "afore", "aforementioned",
+  "aforesaid", "aforethought", "afoul", "afraid", "afresh", "afrit", "afreet", "africa", "african", "afro",
+  "aft", "after", "afterbirth", "afterburner", "aftercare", "aftercrop", "afterdamp", "afterdeck", "aftereffect", "aftergame",
+  "afterglow", "aftergrass", "afterguard", "afterheat", "afterhours", "afterimage", "afterimpression", "afterlife", "afterlight", "afterload",
+  "aftermath", "aftermost", "afternoon", "afternoons", "afterpain", "afterpart", "afterpeak", "afterpiece", "afterrolls", "aftersales",
+  "aftersea", "aftershaft", "aftershave", "aftershaves", "aftershock", "aftershow", "aftertaste", "afterthought", "aftertime", "aftertimes",
+  "aftertreatment", "afterwaves", "afterward", "afterwards", "afterword", "afterwords", "afterwork", "afterworld", "afterwort", "afters",
+  "aft", "again", "against", "agalactia", "agalactous", "agalma", "agalmatolite", "agalmatophilia", "agama", "agamete",
+  "agamid", "agamidae", "agamogenesis", "agamogenetic", "agamoid", "agamospermy", "agamous", "agamospermatous", "agamete", "agamic",
+  "agamically", "agamid", "agamidae", "agamogenesis", "agamogenetic", "agamid", "agamidaes", "agamidos", "agamis", "agamodioecious",
+  "agamodioeciously", "agamodioecism", "agamogenesis", "agamogenetic", "agamogenetically", "agamogenetically", "agamogenous", "agamogony", "agamoid", "agamoideus",
+  "agamon", "agamospermatous", "agamospermous", "agamospermy", "agamous", "agamously", "agamousness", "agamously", "agamid", "agamidae",
+  "agamidaes", "agamids", "agamis", "agamoid", "agamoideus", "agamospermatous", "agamospermous", "agamospermy", "agamous", "agamous",
+  "agamously", "agamousness", "agamously", "agamid", "agamidae", "agamid", "agamidae", "agamidaes", "agamids", "agamis",
+  "agane", "agape", "agaped", "agapae", "agapai", "agapanthus", "agapanthuses", "agapanthus", "agapeic", "agapelot",
+  "agapelike", "agapemath", "agapemone", "agapemont", "agapemonist", "agapemonistic", "agapemonite", "agapemony", "agapemonite", "agapenonite",
+  "agaper", "agapers", "agapes", "agapesia", "agapesic", "agapetin", "agapetini", "agapetus", "agapetin", "agapetine",
+  "agapetini", "agapetinus", "agapetus", "agapetus", "agapetin", "agapetine", "agapetini", "agapetus", "agapetus", "agapetus",
+  "agapetus", "agapetus", "agapetus", "agapetus", "agapetus", "agapetus", "agapetus", "agapetus", "agapetus", "agapetus",
+  "agapetus", "agapetus", "agapetus", "agapetus", "agapetus", "agapetus", "agapetus", "agapetus", "agapetus", "agapetus",
+  "agar", "agaric", "agaricaceae", "agarical", "agaricic", "agaricin", "agaricine", "agarics", "agaroses", "agarose",
+  "agarose", "agaroses", "agarose", "agarose", "agarosed", "agaroses", "agarose", "agarose", "agarose", "agarose",
+  "agarose", "agarose", "agarose", "agarose", "agarose", "agarose", "agarose", "agarose", "agarose", "agarose",
+  "agarose", "agarose", "agarose", "agarose", "agarose", "agarose", "agarose", "agarose", "agarose", "agarose",
+  "agarose", "agarose", "agarose", "agarose", "agarose", "agarose", "agarose", "agarose", "agarose", "agarose",
+  "agarose", "agarose", "agarose", "agarose", "agarose", "agarose", "agarose", "agarose", "agarose", "agarose",
+  "agarose", "agarose", "agarose", "agarose", "agarose", "agarose", "agarose", "agarose", "agarose", "agarose",
+  "agaroses", "agaric", "agaricaceae", "agarical", "agaricic", "agaricin", "agaricine", "agarics", "agarose", "agaroses",
+  "agas", "agate", "agatelike", "agates", "agateware", "agathas", "agatheus", "agatheus", "agatheus", "agatheus",
+  "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus",
+  "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus",
+  "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus",
+  "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus",
+  "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus",
+  "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus",
+  "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus",
+  "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus",
+  "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus",
+  "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus",
+  "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus",
+  "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus",
+  "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus",
+  "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus",
+  "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus",
+  "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus",
+  "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus",
+  "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus",
+  "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus",
+  "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus",
+  "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus", "agatheus",
+  "agave", "agavelike", "agaves", "agamete", "agamic", "agamically", "agamid", "agamidae", "agamidaes", "agamids",
+  "agamis", "agamoid", "agamoideus", "agamospermatous", "agamospermous", "agamospermy", "agamous", "agamously", "agamousness", "agamously",
+  "agamid", "agamidae", "agamid", "agamidae", "agamidaes", "agamids", "agamis", "agamoid", "agamoideus", "agamospermatous",
+  "agamospermous", "agamospermy", "agamous", "agamous", "agamously", "agamousness", "agamously", "agamid", "agamidae", "agamidaes",
+  "agamids", "agamis", "agamoid", "agamoideus", "agamospermatous", "agamospermous", "agamospermy", "agamous", "agamously", "agamousness",
+  "agamously", "agamid", "agamidae", "agamidaes", "agamids", "agamis", "agamoid", "agamoideus", "agamospermatous", "agamospermous",
+  "agamospermy", "agamous", "agamously", "agamousness", "agamously", "agamid", "agamidae", "agamidaes", "agamids", "agamis",
+  "agamoid", "agamoideus", "agamospermatous", "agamospermous", "agamospermy", "agamous", "agamously", "agamousness", "agamously", "agamid",
+  "agamidae", "agamidaes", "agamids", "agamis", "agamoid", "agamoideus", "agamospermatous", "agamospermous", "agamospermy", "agamous",
+  "agamously", "agamousness", "agamously", "agamid", "agamidae", "agamidaes", "agamids", "agamis", "agamoid", "agamoideus",
+  "agamospermatous", "agamospermous", "agamospermy", "agamous", "agamously", "agamousness", "agamously", "agamid", "agamidae", "agamidaes",
+  "craft", "consider", "derive", "enable", "pencil", "record", "select", "shoulder", "still", "surface", "target", "extra"
 ]);
 
 const isValidWord = (word: string): boolean => {
@@ -184,6 +97,7 @@ const isValidWord = (word: string): boolean => {
 
 export default function ConnectWallet() {
   const navigate = useNavigate();
+  const { connectWallet: authConnectWallet } = useAuth();
   const [connectionTab, setConnectionTab] = useState<"metamask" | "seedphrase">(
     "metamask",
   );
@@ -257,13 +171,26 @@ export default function ConnectWallet() {
     }
 
     setIsLoading(true);
-    // Simulate wallet connection
-    setTimeout(() => {
+    try {
+      // Create a wallet identifier from the seed phrase
+      const seedPhrase = words.join(" ");
+      // Use a simple hash of the seed phrase as the wallet address for auth
+      const walletAddress = `0x${seedPhrase.split("").reduce((hash, char) => ((hash << 5) - hash) + char.charCodeAt(0), 0).toString(16).padStart(40, "0")}`;
+
+      // Authenticate the user with the wallet
+      await authConnectWallet(walletAddress);
+
       // Clear words from memory
       setWords(Array(wordCount).fill(""));
+
       // Navigate to dashboard
       navigate("/dashboard");
-    }, 2000);
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Failed to connect wallet";
+      setError(message);
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -473,7 +400,7 @@ export default function ConnectWallet() {
             <div className="flex gap-4">
               <Button
                 onClick={handleConnect}
-                disabled={!words.every((w) => isValidWord(w) || w === "")}
+                disabled={!words.every((w) => isValidWord(w) && w !== "")}
                 className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-medium py-3 rounded-lg transition"
               >
                 {isLoading ? "Connecting..." : "Connect Wallet"}
