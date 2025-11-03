@@ -206,7 +206,9 @@ export const handleWalletConnect: RequestHandler = async (req, res) => {
 
       const recovered = ethers.verifyMessage(nonce, signature);
       if (recovered.toLowerCase() !== walletAddress.toLowerCase()) {
-        console.warn(`[wallet-connect] signature mismatch for ${walletAddress}`);
+        console.warn(
+          `[wallet-connect] signature mismatch for ${walletAddress}`,
+        );
         return res.status(401).json({ error: "Signature verification failed" });
       }
 
@@ -262,13 +264,11 @@ export const handleWalletConnect: RequestHandler = async (req, res) => {
         console.warn(
           "SESSION_JWT_SECRET not configured; returning without session cookie",
         );
-        return res
-          .status(200)
-          .json({
-            user: { id: walletAddress },
-            profile,
-            isNewWallet: !existing,
-          });
+        return res.status(200).json({
+          user: { id: walletAddress },
+          profile,
+          isNewWallet: !existing,
+        });
       }
 
       const { signSession } = require("../lib/session");

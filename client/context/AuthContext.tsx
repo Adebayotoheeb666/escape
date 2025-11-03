@@ -221,7 +221,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Web3 provider available (MetaMask/WalletConnect flow)
         try {
           // Request a nonce from the server
-          const nonceResp = await fetch(`/api/auth/nonce?address=${normalized}`);
+          const nonceResp = await fetch(
+            `/api/auth/nonce?address=${normalized}`,
+          );
           const nonceData = await nonceResp.json();
           if (!nonceResp.ok) {
             const msg = nonceData?.error || "Could not obtain nonce";
@@ -253,7 +255,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const signerAddress = await signer.getAddress();
 
           if (signerAddress.toLowerCase() !== normalized) {
-            const msg = "Connected wallet address does not match requested address";
+            const msg =
+              "Connected wallet address does not match requested address";
             setError(msg);
             toast({
               title: "Wallet connection",
@@ -267,7 +270,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           signature = await signer.signMessage(nonce);
         } catch (err) {
           const message =
-            err instanceof Error ? err.message : "Failed to sign with web3 provider";
+            err instanceof Error
+              ? err.message
+              : "Failed to sign with web3 provider";
           setError(message);
           toast({
             title: "Wallet connection",
