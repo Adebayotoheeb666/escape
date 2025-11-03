@@ -23,6 +23,7 @@ import {
   handleSignOut,
   handleWalletConnect,
   handleGetSession,
+  handleGetNonce,
 } from "./routes/auth";
 
 export function createServer() {
