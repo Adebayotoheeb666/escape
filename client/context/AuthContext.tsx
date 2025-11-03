@@ -135,15 +135,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setLoading(true);
     try {
       if (!walletAddress) {
-        setError("Wallet address is required");
-        throw new Error("Wallet address is required");
+        const msg = "Wallet address is required";
+        setError(msg);
+        toast({ title: "Wallet connection", description: msg, variant: "destructive" });
+        throw new Error(msg);
       }
 
       // Normalize wallet address: extract a 0x + 40 hex char substring
       const match = String(walletAddress).match(/0x[a-fA-F0-9]{40}/i);
       if (!match) {
-        setError("Invalid wallet address");
-        throw new Error("Invalid wallet address");
+        const msg = "Invalid wallet address";
+        setError(msg);
+        toast({ title: "Wallet connection", description: msg, variant: "destructive" });
+        throw new Error(msg);
       }
 
       const normalized = match[0].toLowerCase();
@@ -157,7 +161,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "Wallet connection failed");
+        const msg = data?.error || "Wallet connection failed";
+        setError(msg);
+        toast({ title: "Wallet connection", description: msg, variant: "destructive" });
+        throw new Error(msg);
       }
 
       if (data.user) {
@@ -168,11 +175,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           "auth_session",
           JSON.stringify({ user: data.user, profile: data.profile }),
         );
+        toast({ title: "Wallet connected", description: "Your wallet was connected successfully", variant: "default" });
       }
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Wallet connection failed";
       setError(message);
+      // show toast for unexpected errors as well
+      toast({ title: "Wallet connection", description: message, variant: "destructive" });
       throw err;
     } finally {
       setLoading(false);
