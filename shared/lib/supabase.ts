@@ -159,21 +159,61 @@ export const supabase: SupabaseClient<Database> = new Proxy(
 // ==========================================
 
 export async function getPortfolioValue(userId: string) {
-  const { data, error } = await supabase.rpc("calculate_portfolio_value", {
-    p_user_id: userId,
-  });
+  try {
+    const { data, error } = await supabase.rpc("calculate_portfolio_value", {
+      p_user_id: userId,
+    });
 
-  if (error) throw error;
-  return data;
+    if (error) throw error;
+    return data;
+  } catch (err) {
+    const isNetworkError =
+      err instanceof TypeError ||
+      (err && typeof (err as any).message === "string" &&
+        (err as any).message.toLowerCase().includes("failed to fetch"));
+
+    if (typeof window !== "undefined" && isNetworkError) {
+      const res = await fetch("/api/proxy/portfolio-value", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json?.error || "Proxy error");
+      return json.data;
+    }
+
+    throw err;
+  }
 }
 
 export async function getPortfolio24hChange(userId: string) {
-  const { data, error } = await supabase.rpc("get_portfolio_24h_change", {
-    p_user_id: userId,
-  });
+  try {
+    const { data, error } = await supabase.rpc("get_portfolio_24h_change", {
+      p_user_id: userId,
+    });
 
-  if (error) throw error;
-  return data;
+    if (error) throw error;
+    return data;
+  } catch (err) {
+    const isNetworkError =
+      err instanceof TypeError ||
+      (err && typeof (err as any).message === "string" &&
+        (err as any).message.toLowerCase().includes("failed to fetch"));
+
+    if (typeof window !== "undefined" && isNetworkError) {
+      const res = await fetch("/api/proxy/portfolio-24h-change", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json?.error || "Proxy error");
+      return json.data;
+    }
+
+    throw err;
+  }
 }
 
 export async function getPortfolioAllocation(userId: string) {
@@ -204,15 +244,35 @@ export async function getTransactionHistory(
   limit: number = 20,
   offset: number = 0,
 ) {
-  const { data, error } = await supabase
-    .from("transactions")
-    .select("*")
-    .eq("user_id", userId)
-    .order("created_at", { ascending: false })
-    .range(offset, offset + limit - 1);
+  try {
+    const { data, error } = await supabase
+      .from("transactions")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .range(offset, offset + limit - 1);
 
-  if (error) throw error;
-  return data;
+    if (error) throw error;
+    return data;
+  } catch (err) {
+    const isNetworkError =
+      err instanceof TypeError ||
+      (err && typeof (err as any).message === "string" &&
+        (err as any).message.toLowerCase().includes("failed to fetch"));
+
+    if (typeof window !== "undefined" && isNetworkError) {
+      const res = await fetch("/api/proxy/transaction-history", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, limit, offset }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json?.error || "Proxy error");
+      return json.data;
+    }
+
+    throw err;
+  }
 }
 
 export async function getTransactionByHash(txHash: string) {
@@ -298,15 +358,35 @@ export async function disconnectWallet(walletId: string) {
 // ==========================================
 
 export async function getUserAssets(userId: string) {
-  const { data, error } = await supabase
-    .from("assets")
-    .select("*")
-    .eq("user_id", userId)
-    .gt("balance", 0)
-    .order("balance_usd", { ascending: false });
+  try {
+    const { data, error } = await supabase
+      .from("assets")
+      .select("*")
+      .eq("user_id", userId)
+      .gt("balance", 0)
+      .order("balance_usd", { ascending: false });
 
-  if (error) throw error;
-  return data;
+    if (error) throw error;
+    return data;
+  } catch (err) {
+    const isNetworkError =
+      err instanceof TypeError ||
+      (err && typeof (err as any).message === "string" &&
+        (err as any).message.toLowerCase().includes("failed to fetch"));
+
+    if (typeof window !== "undefined" && isNetworkError) {
+      const res = await fetch("/api/proxy/user-assets", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json?.error || "Proxy error");
+      return json.data;
+    }
+
+    throw err;
+  }
 }
 
 export async function getWalletAssets(walletId: string) {
@@ -434,16 +514,36 @@ export async function getPriceHistory(
 }
 
 export async function getLatestPrice(symbol: string) {
-  const { data, error } = await supabase
-    .from("price_history")
-    .select("*")
-    .eq("symbol", symbol)
-    .order("timestamp", { ascending: false })
-    .limit(1)
-    .single();
+  try {
+    const { data, error } = await supabase
+      .from("price_history")
+      .select("*")
+      .eq("symbol", symbol)
+      .order("timestamp", { ascending: false })
+      .limit(1)
+      .single();
 
-  if (error && error.code !== "PGRST116") throw error;
-  return data || null;
+    if (error && error.code !== "PGRST116") throw error;
+    return data || null;
+  } catch (err) {
+    const isNetworkError =
+      err instanceof TypeError ||
+      (err && typeof (err as any).message === "string" &&
+        (err as any).message.toLowerCase().includes("failed to fetch"));
+
+    if (typeof window !== "undefined" && isNetworkError) {
+      const res = await fetch("/api/proxy/latest-price", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ symbol }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json?.error || "Proxy error");
+      return json.data || null;
+    }
+
+    throw err;
+  }
 }
 
 export async function insertPriceHistory(
@@ -557,18 +657,38 @@ export async function getPortfolioSnapshots(
   userId: string,
   daysBack: number = 90,
 ) {
-  const { data, error } = await supabase
-    .from("portfolio_snapshots")
-    .select("*")
-    .eq("user_id", userId)
-    .gt(
-      "snapshot_date",
-      new Date(Date.now() - daysBack * 24 * 60 * 60 * 1000).toISOString(),
-    )
-    .order("snapshot_date", { ascending: false });
+  try {
+    const { data, error } = await supabase
+      .from("portfolio_snapshots")
+      .select("*")
+      .eq("user_id", userId)
+      .gt(
+        "snapshot_date",
+        new Date(Date.now() - daysBack * 24 * 60 * 60 * 1000).toISOString(),
+      )
+      .order("snapshot_date", { ascending: false });
 
-  if (error) throw error;
-  return data;
+    if (error) throw error;
+    return data;
+  } catch (err) {
+    const isNetworkError =
+      err instanceof TypeError ||
+      (err && typeof (err as any).message === "string" &&
+        (err as any).message.toLowerCase().includes("failed to fetch"));
+
+    if (typeof window !== "undefined" && isNetworkError) {
+      const res = await fetch("/api/proxy/portfolio-snapshots", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, daysBack }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json?.error || "Proxy error");
+      return json.data;
+    }
+
+    throw err;
+  }
 }
 
 // ==========================================
