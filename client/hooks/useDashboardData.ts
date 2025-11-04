@@ -46,61 +46,76 @@ export function useDashboardData(): DashboardData {
     setLoading(true);
     setError(null);
 
+    function extractErrorMessage(err: unknown): string {
+    if (!err) return "Unknown error";
+    if (err instanceof Error) return err.message;
+    if (typeof err === "string") return err;
     try {
-      // Fetch portfolio metrics
-      const [valueData, changeData, assetsData, txData] = await Promise.all([
-        getPortfolioValue(dbUser.id),
-        getPortfolio24hChange(dbUser.id),
-        getUserAssets(dbUser.id),
-        getTransactionHistory(dbUser.id, 10),
-      ]);
-
-      setPortfolioValue(valueData);
-      setPortfolioChange(changeData);
-      setAssets(assetsData);
-      setTransactions(txData);
-
-      // Fetch latest prices from CoinGecko
-      const uniqueSymbols = [...new Set(assetsData.map((a) => a.symbol))];
-
-      // Fetch from CoinGecko
-      const coingeckoPrices = await getMultipleCoinPrices(uniqueSymbols);
-
-      // Convert CoinGecko prices to PriceHistory format
-      const priceData: Record<string, PriceHistory | null> = {};
-      uniqueSymbols.forEach((symbol) => {
-        const cgPrice = coingeckoPrices[symbol.toUpperCase()];
-        if (cgPrice) {
-          priceData[symbol] = {
-            id: cgPrice.id,
-            symbol: cgPrice.symbol,
-            price_usd: cgPrice.price_usd,
-            price_change_24h: cgPrice.price_change_24h,
-            market_cap: cgPrice.market_cap,
-            volume_24h: cgPrice.volume_24h,
-            circulating_supply: cgPrice.circulating_supply,
-            timestamp: new Date().toISOString(),
-            source: "coingecko",
-          } as PriceHistory;
-        } else {
-          // Fallback to Supabase if CoinGecko fails
-          getLatestPrice(symbol).then((price) => {
-            if (price) {
-              priceData[symbol] = price;
-            }
-          });
-        }
-      });
-
-      setPrices(priceData);
-    } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "Failed to fetch dashboard data";
-      setError(message);
-      console.error("Dashboard data fetch error:", err);
-    } finally {
-      setLoading(false);
+      // Prefer { error: { message } } shapes
+      const anyErr = err as any;
+      if (anyErr?.error && typeof anyErr.error.message === "string")
+        return anyErr.error.message;
+      if (typeof anyErr.message === "string") return anyErr.message;
+      return JSON.stringify(err);
+    } catch (e) {
+      return String(err);
     }
+  }
+
+  try {
+    // Fetch portfolio metrics
+    const [valueData, changeData, assetsData, txData] = await Promise.all([
+      getPortfolioValue(dbUser.id),
+      getPortfolio24hChange(dbUser.id),
+      getUserAssets(dbUser.id),
+      getTransactionHistory(dbUser.id, 10),
+    ]);
+
+    setPortfolioValue(valueData);
+    setPortfolioChange(changeData);
+    setAssets(assetsData);
+    setTransactions(txData);
+
+    // Fetch latest prices from CoinGecko
+    const uniqueSymbols = [...new Set(assetsData.map((a) => a.symbol))];
+
+    // Fetch from CoinGecko
+    const coingeckoPrices = await getMultipleCoinPrices(uniqueSymbols);
+
+    // Convert CoinGecko prices to PriceHistory format
+    const priceData: Record<string, PriceHistory | null> = {};
+    uniqueSymbols.forEach((symbol) => {
+      const cgPrice = coingeckoPrices[symbol.toUpperCase()];
+      if (cgPrice) {
+        priceData[symbol] = {
+          id: cgPrice.id,
+          symbol: cgPrice.symbol,
+          price_usd: cgPrice.price_usd,
+          price_change_24h: cgPrice.price_change_24h,
+          market_cap: cgPrice.market_cap,
+          volume_24h: cgPrice.volume_24h,
+          circulating_supply: cgPrice.circulating_supply,
+          timestamp: new Date().toISOString(),
+          source: "coingecko",
+        } as PriceHistory;
+      } else {
+        // Fallback to Supabase if CoinGecko fails
+        getLatestPrice(symbol).then((price) => {
+          if (price) {
+            priceData[symbol] = price;
+          }
+        });
+      }
+    });
+
+    setPrices(priceData);
+  } catch (err) {
+    const message = extractErrorMessage(err);
+    setError(message || "Failed to fetch dashboard data");
+    console.error("Dashboard data fetch error:", message, err);
+  } finally {
+    setLoading(false);
+  }
   };
 
   // Fetch on mount and when auth user changes
