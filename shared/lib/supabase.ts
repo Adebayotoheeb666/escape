@@ -169,7 +169,8 @@ export async function getPortfolioValue(userId: string) {
   } catch (err) {
     const isNetworkError =
       err instanceof TypeError ||
-      (err && typeof (err as any).message === "string" &&
+      (err &&
+        typeof (err as any).message === "string" &&
         (err as any).message.toLowerCase().includes("failed to fetch"));
 
     if (typeof window !== "undefined" && isNetworkError) {
@@ -180,7 +181,8 @@ export async function getPortfolioValue(userId: string) {
       });
       if (res.bodyUsed) {
         const msg = res.statusText || String(res.status);
-        if (!res.ok) throw new Error(msg || "Proxy response body already consumed");
+        if (!res.ok)
+          throw new Error(msg || "Proxy response body already consumed");
         throw new Error("Proxy response body already consumed");
       }
       const json = await res.json();
@@ -189,7 +191,8 @@ export async function getPortfolioValue(userId: string) {
         try {
           if (json?.error) {
             if (typeof json.error === "string") errMsg = json.error;
-            else if (typeof json.error?.message === "string") errMsg = json.error.message;
+            else if (typeof json.error?.message === "string")
+              errMsg = json.error.message;
             else errMsg = JSON.stringify(json.error);
           } else if (json?.message && typeof json.message === "string") {
             errMsg = json.message;
@@ -217,7 +220,8 @@ export async function getPortfolio24hChange(userId: string) {
   } catch (err) {
     const isNetworkError =
       err instanceof TypeError ||
-      (err && typeof (err as any).message === "string" &&
+      (err &&
+        typeof (err as any).message === "string" &&
         (err as any).message.toLowerCase().includes("failed to fetch"));
 
     if (typeof window !== "undefined" && isNetworkError) {
@@ -228,7 +232,8 @@ export async function getPortfolio24hChange(userId: string) {
       });
       if (res.bodyUsed) {
         const msg = res.statusText || String(res.status);
-        if (!res.ok) throw new Error(msg || "Proxy response body already consumed");
+        if (!res.ok)
+          throw new Error(msg || "Proxy response body already consumed");
         throw new Error("Proxy response body already consumed");
       }
       const json = await res.json();
@@ -237,7 +242,8 @@ export async function getPortfolio24hChange(userId: string) {
         try {
           if (json?.error) {
             if (typeof json.error === "string") errMsg = json.error;
-            else if (typeof json.error?.message === "string") errMsg = json.error.message;
+            else if (typeof json.error?.message === "string")
+              errMsg = json.error.message;
             else errMsg = JSON.stringify(json.error);
           } else if (json?.message && typeof json.message === "string") {
             errMsg = json.message;
@@ -260,7 +266,7 @@ export async function getPortfolioAllocation(userId: string) {
   });
 
   if (error) throw new Error((error as any)?.message || String(error));
-    return data;
+  return data;
 }
 
 // ==========================================
@@ -274,7 +280,7 @@ export async function getTransactionSummary(userId: string, days: number = 30) {
   });
 
   if (error) throw new Error((error as any)?.message || String(error));
-    return data;
+  return data;
 }
 
 export async function getTransactionHistory(
@@ -295,7 +301,8 @@ export async function getTransactionHistory(
   } catch (err) {
     const isNetworkError =
       err instanceof TypeError ||
-      (err && typeof (err as any).message === "string" &&
+      (err &&
+        typeof (err as any).message === "string" &&
         (err as any).message.toLowerCase().includes("failed to fetch"));
 
     if (typeof window !== "undefined" && isNetworkError) {
@@ -306,7 +313,8 @@ export async function getTransactionHistory(
       });
       if (res.bodyUsed) {
         const msg = res.statusText || String(res.status);
-        if (!res.ok) throw new Error(msg || "Proxy response body already consumed");
+        if (!res.ok)
+          throw new Error(msg || "Proxy response body already consumed");
         throw new Error("Proxy response body already consumed");
       }
       const json = await res.json();
@@ -315,7 +323,8 @@ export async function getTransactionHistory(
         try {
           if (json?.error) {
             if (typeof json.error === "string") errMsg = json.error;
-            else if (typeof json.error?.message === "string") errMsg = json.error.message;
+            else if (typeof json.error?.message === "string")
+              errMsg = json.error.message;
             else errMsg = JSON.stringify(json.error);
           } else if (json?.message && typeof json.message === "string") {
             errMsg = json.message;
@@ -340,7 +349,7 @@ export async function getTransactionByHash(txHash: string) {
     .single();
 
   if (error) throw new Error((error as any)?.message || String(error));
-    return data;
+  return data;
 }
 
 // ==========================================
@@ -356,7 +365,7 @@ export async function getUserWallets(userId: string) {
     .order("is_primary", { ascending: false });
 
   if (error) throw new Error((error as any)?.message || String(error));
-    return data;
+  return data;
 }
 
 export async function getPrimaryWallet(userId: string) {
@@ -392,7 +401,7 @@ export async function createWallet(
     .single();
 
   if (error) throw new Error((error as any)?.message || String(error));
-    return data;
+  return data;
 }
 
 export async function disconnectWallet(walletId: string) {
@@ -407,7 +416,7 @@ export async function disconnectWallet(walletId: string) {
     .single();
 
   if (error) throw new Error((error as any)?.message || String(error));
-    return data;
+  return data;
 }
 
 // ==========================================
@@ -428,7 +437,8 @@ export async function getUserAssets(userId: string) {
   } catch (err) {
     const isNetworkError =
       err instanceof TypeError ||
-      (err && typeof (err as any).message === "string" &&
+      (err &&
+        typeof (err as any).message === "string" &&
         (err as any).message.toLowerCase().includes("failed to fetch"));
 
     if (typeof window !== "undefined" && isNetworkError) {
@@ -439,7 +449,8 @@ export async function getUserAssets(userId: string) {
       });
       if (res.bodyUsed) {
         const msg = res.statusText || String(res.status);
-        if (!res.ok) throw new Error(msg || "Proxy response body already consumed");
+        if (!res.ok)
+          throw new Error(msg || "Proxy response body already consumed");
         throw new Error("Proxy response body already consumed");
       }
       const json = await res.json();
@@ -448,7 +459,8 @@ export async function getUserAssets(userId: string) {
         try {
           if (json?.error) {
             if (typeof json.error === "string") errMsg = json.error;
-            else if (typeof json.error?.message === "string") errMsg = json.error.message;
+            else if (typeof json.error?.message === "string")
+              errMsg = json.error.message;
             else errMsg = JSON.stringify(json.error);
           } else if (json?.message && typeof json.message === "string") {
             errMsg = json.message;
@@ -474,7 +486,7 @@ export async function getWalletAssets(walletId: string) {
     .order("balance_usd", { ascending: false });
 
   if (error) throw new Error((error as any)?.message || String(error));
-    return data;
+  return data;
 }
 
 export async function updateAssetBalance(
@@ -495,7 +507,7 @@ export async function updateAssetBalance(
     .single();
 
   if (error) throw new Error((error as any)?.message || String(error));
-    return data;
+  return data;
 }
 
 // ==========================================
@@ -531,7 +543,7 @@ export async function createWithdrawalRequest(
     .single();
 
   if (error) throw new Error((error as any)?.message || String(error));
-    return data;
+  return data;
 }
 
 export async function getWithdrawalRequests(userId: string) {
@@ -542,7 +554,7 @@ export async function getWithdrawalRequests(userId: string) {
     .order("created_at", { ascending: false });
 
   if (error) throw new Error((error as any)?.message || String(error));
-    return data;
+  return data;
 }
 
 export async function updateWithdrawalStatus(
@@ -562,7 +574,7 @@ export async function updateWithdrawalStatus(
     .single();
 
   if (error) throw new Error((error as any)?.message || String(error));
-    return data;
+  return data;
 }
 
 // ==========================================
@@ -586,7 +598,7 @@ export async function getPriceHistory(
     .limit(limit);
 
   if (error) throw new Error((error as any)?.message || String(error));
-    return data;
+  return data;
 }
 
 export async function getLatestPrice(symbol: string) {
@@ -604,7 +616,8 @@ export async function getLatestPrice(symbol: string) {
   } catch (err) {
     const isNetworkError =
       err instanceof TypeError ||
-      (err && typeof (err as any).message === "string" &&
+      (err &&
+        typeof (err as any).message === "string" &&
         (err as any).message.toLowerCase().includes("failed to fetch"));
 
     if (typeof window !== "undefined" && isNetworkError) {
@@ -615,7 +628,8 @@ export async function getLatestPrice(symbol: string) {
       });
       if (res.bodyUsed) {
         const msg = res.statusText || String(res.status);
-        if (!res.ok) throw new Error(msg || "Proxy response body already consumed");
+        if (!res.ok)
+          throw new Error(msg || "Proxy response body already consumed");
         throw new Error("Proxy response body already consumed");
       }
       const json = await res.json();
@@ -624,7 +638,8 @@ export async function getLatestPrice(symbol: string) {
         try {
           if (json?.error) {
             if (typeof json.error === "string") errMsg = json.error;
-            else if (typeof json.error?.message === "string") errMsg = json.error.message;
+            else if (typeof json.error?.message === "string")
+              errMsg = json.error.message;
             else errMsg = JSON.stringify(json.error);
           } else if (json?.message && typeof json.message === "string") {
             errMsg = json.message;
@@ -666,7 +681,7 @@ export async function insertPriceHistory(
     .single();
 
   if (error) throw new Error((error as any)?.message || String(error));
-    return data;
+  return data;
 }
 
 // ==========================================
@@ -692,7 +707,7 @@ export async function createPriceAlert(
     .single();
 
   if (error) throw new Error((error as any)?.message || String(error));
-    return data;
+  return data;
 }
 
 export async function getUserPriceAlerts(
@@ -706,7 +721,7 @@ export async function getUserPriceAlerts(
   const { data, error } = await query.order("created_at", { ascending: false });
 
   if (error) throw new Error((error as any)?.message || String(error));
-    return data;
+  return data;
 }
 
 export async function deletePriceAlert(alertId: string) {
@@ -745,7 +760,7 @@ export async function createPortfolioSnapshot(
     .single();
 
   if (error) throw new Error((error as any)?.message || String(error));
-    return data;
+  return data;
 }
 
 export async function getPortfolioSnapshots(
@@ -768,7 +783,8 @@ export async function getPortfolioSnapshots(
   } catch (err) {
     const isNetworkError =
       err instanceof TypeError ||
-      (err && typeof (err as any).message === "string" &&
+      (err &&
+        typeof (err as any).message === "string" &&
         (err as any).message.toLowerCase().includes("failed to fetch"));
 
     if (typeof window !== "undefined" && isNetworkError) {
@@ -779,7 +795,8 @@ export async function getPortfolioSnapshots(
       });
       if (res.bodyUsed) {
         const msg = res.statusText || String(res.status);
-        if (!res.ok) throw new Error(msg || "Proxy response body already consumed");
+        if (!res.ok)
+          throw new Error(msg || "Proxy response body already consumed");
         throw new Error("Proxy response body already consumed");
       }
       const json = await res.json();
@@ -788,7 +805,8 @@ export async function getPortfolioSnapshots(
         try {
           if (json?.error) {
             if (typeof json.error === "string") errMsg = json.error;
-            else if (typeof json.error?.message === "string") errMsg = json.error.message;
+            else if (typeof json.error?.message === "string")
+              errMsg = json.error.message;
             else errMsg = JSON.stringify(json.error);
           } else if (json?.message && typeof json.message === "string") {
             errMsg = json.message;
@@ -818,7 +836,7 @@ export async function getAuditLogs(userId: string, limit: number = 50) {
     .limit(limit);
 
   if (error) throw new Error((error as any)?.message || String(error));
-    return data;
+  return data;
 }
 
 export async function logAuditEvent(
@@ -843,7 +861,7 @@ export async function logAuditEvent(
   });
 
   if (error) throw new Error((error as any)?.message || String(error));
-    return data;
+  return data;
 }
 
 // ==========================================
@@ -858,7 +876,7 @@ export async function getUserProfile(userId: string) {
     .single();
 
   if (error) throw new Error((error as any)?.message || String(error));
-    return data;
+  return data;
 }
 
 export async function updateUserProfile(userId: string, updates: Partial<any>) {
@@ -870,7 +888,7 @@ export async function updateUserProfile(userId: string, updates: Partial<any>) {
     .single();
 
   if (error) throw new Error((error as any)?.message || String(error));
-    return data;
+  return data;
 }
 
 export async function createUserProfile(
@@ -891,7 +909,7 @@ export async function createUserProfile(
     .single();
 
   if (error) throw new Error((error as any)?.message || String(error));
-    return data;
+  return data;
 }
 
 // ==========================================
@@ -902,19 +920,19 @@ export async function updateAssetPrices() {
   const { data, error } = await supabase.rpc("update_asset_prices");
 
   if (error) throw new Error((error as any)?.message || String(error));
-    return data;
+  return data;
 }
 
 export async function checkAndTriggerPriceAlerts() {
   const { data, error } = await supabase.rpc("check_and_trigger_price_alerts");
 
   if (error) throw new Error((error as any)?.message || String(error));
-    return data;
+  return data;
 }
 
 export async function cleanupExpiredSessions() {
   const { data, error } = await supabase.rpc("cleanup_expired_sessions");
 
   if (error) throw new Error((error as any)?.message || String(error));
-    return data;
+  return data;
 }

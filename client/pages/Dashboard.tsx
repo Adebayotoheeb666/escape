@@ -96,10 +96,14 @@ export default function Dashboard() {
           const anyErr = e as any;
           if (anyErr?.error) {
             if (typeof anyErr.error === "string") return anyErr.error;
-            if (typeof anyErr.error?.message === "string") return anyErr.error.message;
+            if (typeof anyErr.error?.message === "string")
+              return anyErr.error.message;
           }
           if (typeof anyErr.message === "string") return anyErr.message;
-          if (typeof anyErr.status === "number" || typeof anyErr.statusText === "string") {
+          if (
+            typeof anyErr.status === "number" ||
+            typeof anyErr.statusText === "string"
+          ) {
             return `${anyErr.status || ""} ${anyErr.statusText || ""}`.trim();
           }
           try {

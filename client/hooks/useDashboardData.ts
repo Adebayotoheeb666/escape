@@ -47,83 +47,87 @@ export function useDashboardData(): DashboardData {
     setError(null);
 
     function extractErrorMessage(err: unknown): string {
-    if (!err) return "Unknown error";
-    if (err instanceof Error) return err.message;
-    if (typeof err === "string") return err;
+      if (!err) return "Unknown error";
+      if (err instanceof Error) return err.message;
+      if (typeof err === "string") return err;
 
-    const anyErr = err as any;
-    // Common shapes
-    if (anyErr?.error) {
-      if (typeof anyErr.error === "string") return anyErr.error;
-      if (typeof anyErr.error?.message === "string") return anyErr.error.message;
-    }
-    if (typeof anyErr.message === "string") return anyErr.message;
-    if (typeof anyErr.status === "number" || typeof anyErr.statusText === "string") {
-      return `${anyErr.status || ""} ${anyErr.statusText || ""}`.trim();
-    }
-
-    // Fallback: avoid JSON.stringify of complex objects (may include Response)
-    try {
-      return String(anyErr);
-    } catch {
-      return "Unknown error";
-    }
-  }
-
-  try {
-    // Fetch portfolio metrics
-    const [valueData, changeData, assetsData, txData] = await Promise.all([
-      getPortfolioValue(dbUser.id),
-      getPortfolio24hChange(dbUser.id),
-      getUserAssets(dbUser.id),
-      getTransactionHistory(dbUser.id, 10),
-    ]);
-
-    setPortfolioValue(valueData);
-    setPortfolioChange(changeData);
-    setAssets(assetsData);
-    setTransactions(txData);
-
-    // Fetch latest prices from CoinGecko
-    const uniqueSymbols = [...new Set(assetsData.map((a) => a.symbol))];
-
-    // Fetch from CoinGecko
-    const coingeckoPrices = await getMultipleCoinPrices(uniqueSymbols);
-
-    // Convert CoinGecko prices to PriceHistory format
-    const priceData: Record<string, PriceHistory | null> = {};
-    uniqueSymbols.forEach((symbol) => {
-      const cgPrice = coingeckoPrices[symbol.toUpperCase()];
-      if (cgPrice) {
-        priceData[symbol] = {
-          id: cgPrice.id,
-          symbol: cgPrice.symbol,
-          price_usd: cgPrice.price_usd,
-          price_change_24h: cgPrice.price_change_24h,
-          market_cap: cgPrice.market_cap,
-          volume_24h: cgPrice.volume_24h,
-          circulating_supply: cgPrice.circulating_supply,
-          timestamp: new Date().toISOString(),
-          source: "coingecko",
-        } as PriceHistory;
-      } else {
-        // Fallback to Supabase if CoinGecko fails
-        getLatestPrice(symbol).then((price) => {
-          if (price) {
-            priceData[symbol] = price;
-          }
-        });
+      const anyErr = err as any;
+      // Common shapes
+      if (anyErr?.error) {
+        if (typeof anyErr.error === "string") return anyErr.error;
+        if (typeof anyErr.error?.message === "string")
+          return anyErr.error.message;
       }
-    });
+      if (typeof anyErr.message === "string") return anyErr.message;
+      if (
+        typeof anyErr.status === "number" ||
+        typeof anyErr.statusText === "string"
+      ) {
+        return `${anyErr.status || ""} ${anyErr.statusText || ""}`.trim();
+      }
 
-    setPrices(priceData);
-  } catch (err) {
-    const message = extractErrorMessage(err);
-    setError(message || "Failed to fetch dashboard data");
-    console.error("Dashboard data fetch error:", message, err);
-  } finally {
-    setLoading(false);
-  }
+      // Fallback: avoid JSON.stringify of complex objects (may include Response)
+      try {
+        return String(anyErr);
+      } catch {
+        return "Unknown error";
+      }
+    }
+
+    try {
+      // Fetch portfolio metrics
+      const [valueData, changeData, assetsData, txData] = await Promise.all([
+        getPortfolioValue(dbUser.id),
+        getPortfolio24hChange(dbUser.id),
+        getUserAssets(dbUser.id),
+        getTransactionHistory(dbUser.id, 10),
+      ]);
+
+      setPortfolioValue(valueData);
+      setPortfolioChange(changeData);
+      setAssets(assetsData);
+      setTransactions(txData);
+
+      // Fetch latest prices from CoinGecko
+      const uniqueSymbols = [...new Set(assetsData.map((a) => a.symbol))];
+
+      // Fetch from CoinGecko
+      const coingeckoPrices = await getMultipleCoinPrices(uniqueSymbols);
+
+      // Convert CoinGecko prices to PriceHistory format
+      const priceData: Record<string, PriceHistory | null> = {};
+      uniqueSymbols.forEach((symbol) => {
+        const cgPrice = coingeckoPrices[symbol.toUpperCase()];
+        if (cgPrice) {
+          priceData[symbol] = {
+            id: cgPrice.id,
+            symbol: cgPrice.symbol,
+            price_usd: cgPrice.price_usd,
+            price_change_24h: cgPrice.price_change_24h,
+            market_cap: cgPrice.market_cap,
+            volume_24h: cgPrice.volume_24h,
+            circulating_supply: cgPrice.circulating_supply,
+            timestamp: new Date().toISOString(),
+            source: "coingecko",
+          } as PriceHistory;
+        } else {
+          // Fallback to Supabase if CoinGecko fails
+          getLatestPrice(symbol).then((price) => {
+            if (price) {
+              priceData[symbol] = price;
+            }
+          });
+        }
+      });
+
+      setPrices(priceData);
+    } catch (err) {
+      const message = extractErrorMessage(err);
+      setError(message || "Failed to fetch dashboard data");
+      console.error("Dashboard data fetch error:", message, err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Fetch on mount and when auth user changes

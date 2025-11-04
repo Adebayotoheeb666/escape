@@ -39,10 +39,9 @@ export const handlePortfolio24hChange: RequestHandler = async (req, res) => {
   if (!userId) return res.status(400).json({ error: "userId required" });
   try {
     const supabase = serverSupabase();
-    const { data, error } = await supabase.rpc(
-      "get_portfolio_24h_change",
-      { p_user_id: userId },
-    );
+    const { data, error } = await supabase.rpc("get_portfolio_24h_change", {
+      p_user_id: userId,
+    });
     if (error) return res.status(500).json({ error: error.message });
     return res.json({ data });
   } catch (err) {
@@ -123,7 +122,8 @@ export const handleLatestPrice: RequestHandler = async (req, res) => {
       .order("timestamp", { ascending: false })
       .limit(1)
       .single();
-    if (error && error.code !== "PGRST116") return res.status(500).json({ error: error.message });
+    if (error && error.code !== "PGRST116")
+      return res.status(500).json({ error: error.message });
     return res.json({ data: data || null });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
