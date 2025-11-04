@@ -89,7 +89,22 @@ export default function Dashboard() {
 
         setPortfolioHistory(chartData);
       } catch (err) {
-        console.error("Failed to fetch portfolio history:", err);
+        const extractErrorMessage = (e: unknown) => {
+          if (!e) return "Unknown error";
+          if (e instanceof Error) return e.message;
+          try {
+            const anyErr = e as any;
+            if (anyErr?.error && typeof anyErr.error.message === "string")
+              return anyErr.error.message;
+            if (typeof anyErr.message === "string") return anyErr.message;
+            return JSON.stringify(e);
+          } catch (_) {
+            return String(e);
+          }
+        };
+
+        const msg = extractErrorMessage(err);
+        console.error("Failed to fetch portfolio history:", msg, err);
       }
     }
 
